@@ -9,8 +9,8 @@ type CueDocument = Pick<Document, "hidden" | "title" | "addEventListener" | "rem
 /** Tab title while a finished plan waits in a background tab. */
 export function planReadyTitle(problemCount: number | null | undefined): string {
   const n = typeof problemCount === "number" && Number.isFinite(problemCount) ? Math.max(0, Math.floor(problemCount)) : null;
-  if (n === null) return "Plan ready · SightWork";
-  return `Plan ready: ${n} ${n === 1 ? "problem" : "problems"} · SightWork`;
+  if (n === null) return "Plan ready · SiteWork";
+  return `Plan ready: ${n} ${n === 1 ? "problem" : "problems"} · SiteWork`;
 }
 
 /**

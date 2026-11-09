@@ -2,7 +2,7 @@ import { test, expect, WALKTHROUGH, expectNoAxeViolations, expectNoSideScroll } 
 import type { Page } from "@playwright/test";
 
 /**
- * A real run that stops on a take recorded in SightWork's camera says the video is still kept on this
+ * A real run that stops on a take recorded in SiteWork's camera says the video is still kept on this
  * device, with a Save video button. A video picked from files gets no such line. /api stays blocked
  * (helpers.ts) except the stubbed routes below.
  */

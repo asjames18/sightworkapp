@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 export const metadata: Metadata = {
-  title: "Example image credits | SightWork",
-  description: "Where the photos in SightWork's example plans come from, and their licenses.",
+  title: "Example image credits | SiteWork",
+  description: "Where the photos in SiteWork's example plans come from, and their licenses.",
 };
 
 const kitchen = [
@@ -50,7 +50,7 @@ export default function Credits() {
             href="/"
             className="-mx-2 flex min-h-11 items-center rounded-lg px-2 text-xl font-extrabold tracking-tight focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
           >
-            Sight<span className="text-accent">Work</span>
+            Site<span className="text-accent">Work</span>
           </Link>
           <Link href="/start" className="btn-secondary text-sm">
             Back to the app
@@ -60,14 +60,14 @@ export default function Credits() {
       <main id="main-content" tabIndex={-1} className="outline-none mx-auto w-full max-w-3xl px-4 pb-16 pt-10 sm:px-6">
         <h1 className="text-3xl font-extrabold tracking-tight">Example image credits</h1>
         <p className="mt-3 text-base text-ink/75">
-          The sample plans are written by hand on free-to-use photos, to show what a plan looks like. They are not SightWork runs. The one real run
+          The sample plans are written by hand on free-to-use photos, to show what a plan looks like. They are not SiteWork runs. The one real run
           uses frames from our own walkthrough video.
         </p>
 
         <section aria-labelledby="real-heading" className="mt-10">
           <h2 id="real-heading" className="text-xl font-extrabold">Real run: church sanctuary stage</h2>
           <p className="mt-2 text-sm text-ink/75">
-            Frames and the AI after picture come from a real SightWork run on a walkthrough the SightWork team filmed in a church sanctuary on
+            Frames and the AI after picture come from a real SiteWork run on a walkthrough the SiteWork team filmed in a church sanctuary on
             Oct 29, 2026, with the church&apos;s permission. The logo on the pulpit is covered in every frame. Not for reuse.
           </p>
         </section>

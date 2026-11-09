@@ -1,6 +1,6 @@
 /**
  * "Along your walk" timeline on the plan: one bar the length of the walkthrough, with a marker per problem at
- * the second it was seen and a tick where the speaker brought it up. It shows at a glance that SightWork
+ * the second it was seen and a tick where the speaker brought it up. It shows at a glance that SiteWork
  * watched the whole walk and caught things nobody said. Pure logic, no DOM, no network.
  */
 import { issueTier, type Tier } from "@/lib/planExtras";

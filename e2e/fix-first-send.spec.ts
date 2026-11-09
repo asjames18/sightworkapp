@@ -26,7 +26,7 @@ test("Send Start here copies just the Fix now problems and the steps that fix th
   expect(text).toContain("About 3–5.5 h of work");
   expect(text).toContain("Start here: 1 of 4 done.");
   expect(text).toContain("The other 2 steps can follow once these are done.");
-  expect(text).toContain("Made with SightWork");
+  expect(text).toContain("Made with SiteWork");
 
   for (const width of [375, 768, 1280]) {
     await page.setViewportSize({ width, height: 800 });

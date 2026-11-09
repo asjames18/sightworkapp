@@ -20,7 +20,7 @@ test("the counts section sends just the counts", async ({ page, context }) => {
   expect(text.startsWith("Example plan, not a real count.\nCounts")).toBe(true);
   const label = (await counts.locator("li").first().locator("p").nth(1).innerText()).trim();
   expect(text).toMatch(new RegExp(`\\n- \\d+(-\\d+)? ${label.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}`));
-  expect(text).toContain("Made with SightWork");
+  expect(text).toContain("Made with SiteWork");
 
   for (const width of [375, 768, 1280]) {
     await page.setViewportSize({ width, height: 800 });

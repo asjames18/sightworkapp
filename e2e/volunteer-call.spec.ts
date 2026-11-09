@@ -25,7 +25,7 @@ test("the Volunteers row sends a call for help, and paid rows have no such butto
     expect(text).toContain("could use your help.");
     expect(text).toContain("What volunteers will do");
     expect(text).toContain("Reply if you can help, and tell us which days work for you.");
-    expect(text.trimEnd().endsWith("Made with SightWork \u00B7 https://sightwork.melanatedintech.com")).toBe(true);
+    expect(text.trimEnd().endsWith("Made with SiteWork \u00B7 https://sightwork.melanatedintech.com")).toBe(true);
     await expectNoSideScroll(page);
     await page.evaluate(() => window.scrollTo(0, 0));
     await expectNoAxeViolations(page, `volunteer call ${width}`);

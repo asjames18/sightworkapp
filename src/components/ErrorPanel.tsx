@@ -22,7 +22,7 @@ export function ErrorPanel({ onRetry }: { onRetry: () => void }) {
             href="/"
             className="-mx-2 flex min-h-11 items-center rounded-lg px-2 text-xl font-extrabold tracking-tight focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
           >
-            Sight<span className="text-accent">Work</span>
+            Site<span className="text-accent">Work</span>
           </Link>
         </div>
       </header>

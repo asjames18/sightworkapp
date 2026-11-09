@@ -14,7 +14,7 @@ export interface MetaCredit {
   step: string;
   /** What the step does, one short phrase. */
   job: string;
-  /** Meta model name as judges and users see it. */
+  /** Meta model name as users see it. */
   model: string;
   /** Where it ran. */
   host: string;

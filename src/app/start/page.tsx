@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { SightWorkFlow } from "@/components/SightWorkFlow";
 
 export const metadata: Metadata = {
-  title: "Make a work plan | SightWork",
+  title: "Make a work plan | SiteWork",
   description: "Upload a walkthrough video (30 seconds for a small room up to 5 minutes for a warehouse) and get a work plan: problems worst first with proof frames, counts, steps in order and materials.",
 };
 

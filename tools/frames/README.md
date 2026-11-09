@@ -1,6 +1,6 @@
 # Frame sampler
 
-Picks the still frames SightWork analyzes from a walkthrough video. Needs `ffmpeg` and `ffprobe` on PATH. It has no npm dependencies and makes no network calls.
+Picks the still frames SiteWork analyzes from a walkthrough video. Needs `ffmpeg` and `ffprobe` on PATH. It has no npm dependencies and makes no network calls.
 
 ```bash
 npm run frames -- path/to/walkthrough.mp4          # writes tools/frames/out/<name>/

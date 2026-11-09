@@ -53,7 +53,7 @@ test("the cost card sends the range, the biggest steps and the assumptions", asy
   expect(text).toMatch(/Biggest steps:\n- Step \d+, /);
   expect(text).toContain("- Mid-grade materials");
   expect(text).toContain("Get quotes before you commit to the spend.");
-  expect(text).toContain("Made with SightWork");
+  expect(text).toContain("Made with SiteWork");
   expect(text).not.toContain("Example plan");
 
   for (const width of [375, 768, 1280]) {

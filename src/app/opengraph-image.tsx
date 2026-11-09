@@ -2,7 +2,7 @@ import { ImageResponse } from "next/og";
 import { samplePlan } from "@/lib/mock/samplePlan";
 
 // Social card for the landing link, drawn from the featured sample plan (hand-written, on CC0 photos; labeled as a sample).
-export const alt = "SightWork: film a walkthrough, get a work plan. Sample plan card.";
+export const alt = "SiteWork App: film a walkthrough, get a work plan. Sample plan card.";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
@@ -26,7 +26,7 @@ export default function OpengraphImage() {
               <path d="M5 16c3-5.5 6.8-8 11-8s8 2.5 11 8c-3 5.5-6.8 8-11 8s-8-2.5-11-8z" fill="none" stroke={PAPER} strokeWidth="2.2" strokeLinejoin="round" />
               <circle cx="16" cy="16" r="4.2" fill={ACCENT} />
             </svg>
-            <div style={{ fontSize: 36, fontWeight: 700 }}>SightWork</div>
+            <div style={{ fontSize: 36, fontWeight: 700 }}>SiteWork</div>
           </div>
           <div style={{ display: "flex", flexDirection: "column" }}>
             <div style={{ fontSize: 54, fontWeight: 800, lineHeight: 1.1, letterSpacing: -1 }}>Film a walkthrough.</div>
@@ -35,7 +35,7 @@ export default function OpengraphImage() {
               Counts, ranked problems with proof, and ordered work steps from one phone video.
             </div>
           </div>
-          <div style={{ fontSize: 20, color: MUTED }}>Free to try in this demo. No account needed.</div>
+          <div style={{ fontSize: 20, color: MUTED }}>Open source. Film a walkthrough. Get a work plan.</div>
         </div>
 
         <div style={{ display: "flex", flexDirection: "column", flex: 1, background: "#ffffff", borderRadius: 28, padding: 36, border: "1px solid #e4e1da" }}>

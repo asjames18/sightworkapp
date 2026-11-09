@@ -38,7 +38,7 @@ test("stepWhen gives each step its day and hours on the starting schedule, multi
 test("crew calendar keeps only that crew's steps at the same times as the full calendar", () => {
   const full = planCalendar(plan, now);
   const crew = planCalendar(plan, now, { only: [1, 3], label: "Electrician" });
-  assert.match(crew, /X-WR-CALNAME:SightWork: Main sanctuary stage\\, Electrician/);
+  assert.match(crew, /X-WR-CALNAME:SiteWork: Main sanctuary stage\\, Electrician/);
   assert.match(crew, /SUMMARY:Step 1: Reroute the stage cable/);
   assert.match(crew, /SUMMARY:Step 3: Replace the exit sign \(day 1 of 2\)/);
   assert.doesNotMatch(crew, /Paint the back wall\r\n/);

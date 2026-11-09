@@ -46,7 +46,7 @@ test("each crew row sends just that crew's steps and materials", async ({ page, 
     expect(text).toContain("Step 5. ");
     expect(text).toMatch(/\n {3}When: (Mon|Tue|Wed|Thu|Fri), \w{3} \d{1,2}, \d{1,2}(:\d{2})? (AM|PM) to /);
     expect(text).toContain("this list is step 5 only.");
-    expect(text).toContain("Made with SightWork");
+    expect(text).toContain("Made with SiteWork");
     await expectNoSideScroll(page);
     await page.evaluate(() => window.scrollTo(0, 0));
     await expectNoAxeViolations(page, `crew send ${width}`);
@@ -66,7 +66,7 @@ test("each crew row downloads a calendar of just that crew's steps, at the full 
     const [crewDl] = await Promise.all([page.waitForEvent("download"), btn.click()]);
     expect(crewDl.suggestedFilename()).toMatch(/^sightwork-painter-steps-\d{4}-\d{2}-\d{2}\.ics$/);
     const crewIcs = (await readFile((await crewDl.path())!, "utf8")).replace(/\r\n /g, "");
-    expect(crewIcs).toMatch(/X-WR-CALNAME:SightWork: .*\\, Painter\r\n/);
+    expect(crewIcs).toMatch(/X-WR-CALNAME:SiteWork: .*\\, Painter\r\n/);
     expect(crewIcs).toMatch(/SUMMARY:Step 5: /);
     expect(crewIcs).not.toMatch(/SUMMARY:Step 3: /);
     await expect(card.getByText("Saved. Send the file to them.")).toBeVisible();

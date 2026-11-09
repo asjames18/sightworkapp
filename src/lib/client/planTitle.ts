@@ -1,6 +1,6 @@
 /**
  * Browser tab title for an open plan. A finished or reopened plan names its space in the tab, the
- * history list and a bookmark ("Sanctuary stage plan | SightWork"), so two plans open in two tabs can be
+ * history list and a bookmark ("Sanctuary stage plan | SiteWork"), so two plans open in two tabs can be
  * told apart. Example plans keep the title their own page sets.
  */
 
@@ -9,7 +9,7 @@ const MAX_NAME = 48;
 /** Tab title for a plan of this space; the plain app title when there is no usable name. */
 export function planPageTitle(spaceName: string | null | undefined): string {
   const name = typeof spaceName === "string" ? spaceName.replace(/\s+/g, " ").trim() : "";
-  if (!name) return "Your plan | SightWork";
+  if (!name) return "Your plan | SiteWork";
   let short = name;
   if (short.length > MAX_NAME) {
     const cut = short.slice(0, MAX_NAME);
@@ -18,7 +18,7 @@ export function planPageTitle(spaceName: string | null | undefined): string {
   }
   // "Sanctuary stage plan", but not "Sanctuary plan plan".
   const label = /\bplan$/i.test(short) ? short : `${short} plan`;
-  return `${label} | SightWork`;
+  return `${label} | SiteWork`;
 }
 
 type TitleDocument = Pick<Document, "title"> & { head?: Node | null };

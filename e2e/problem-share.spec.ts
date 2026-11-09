@@ -24,7 +24,7 @@ test("each problem card sends just that problem", async ({ page, context }) => {
   const text = await page.evaluate(() => navigator.clipboard.readText());
   expect(text.startsWith("Example plan, not a real inspection.\nProblem #")).toBe(true);
   expect(text).toContain(title);
-  expect(text).toContain("Made with SightWork");
+  expect(text).toContain("Made with SiteWork");
 
   for (const width of [375, 768, 1280]) {
     await page.setViewportSize({ width, height: 800 });

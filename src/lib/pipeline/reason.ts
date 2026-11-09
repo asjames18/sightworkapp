@@ -1,5 +1,5 @@
 /**
- * SightWork pipeline step: `reason`.
+ * SiteWork pipeline step: `reason`.
  *
  * Takes the sampled frames, the SAM segmentation result, and the
  * narration transcript, and turns them into the ranked-issues / work-plan

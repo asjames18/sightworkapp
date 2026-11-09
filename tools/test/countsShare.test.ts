@@ -57,7 +57,7 @@ test("the real sanctuary run's shared text keeps every problem, every step and t
   assert.match(t, /^6\. Unsecured equipment and tangled cords on stage \(medium\)$/m);
   assert.match(t, /^6\. Organize and secure stage equipment /m);
   assert.match(t, /^Cost: \$260-\$460 for Sebring, FL\./m);
-  assert.match(t, /Made with SightWork \u00B7 sightwork\.vercel\.app$/);
+  assert.match(t, /Made with SiteWork \u00B7 sightwork\.vercel\.app$/);
 });
 
 test("when the text runs long the counts line is dropped before anything is cut", () => {

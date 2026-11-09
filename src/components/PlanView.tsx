@@ -334,7 +334,7 @@ export function PlanView({
         {plan.issues.length > 0 && !masks && (
           <p className="mb-4 rounded-xl border border-ink/10 bg-white/70 px-4 py-3 text-sm text-ink/70">
             {sample
-              ? "In this sample the dashed boxes are drawn by hand to show where each problem is. On a real run, SightWork marks them from your video."
+              ? "In this sample the dashed boxes are drawn by hand to show where each problem is. On a real run, SiteWork marks them from your video."
               : roughBoxes
                 ? "Exact outlines are off for this plan, so the dashed boxes are rough highlights from the plan step. Each problem still shows the frame it was found in."
                 : "Outlines on the proof frames are off for this plan. Each problem still shows the frame it was found in."}
@@ -403,7 +403,7 @@ export function PlanView({
                 : plan.meta?.skipped?.cost || (location && !sample)
                 ? `The cost range couldn\u2019t be worked out this run. The materials and work steps above are complete; try again to price them for ${location ?? "your area"}.`
                 : sample
-                  ? "This sample has no cost range. On a real run with a city or region, SightWork prices the materials and labor for that area."
+                  ? "This sample has no cost range. On a real run with a city or region, SiteWork prices the materials and labor for that area."
                   : "This run didn\u2019t include a city and state, so there\u2019s no cost range. New runs ask for them before the plan is made."}
             </Empty>
           </Section>

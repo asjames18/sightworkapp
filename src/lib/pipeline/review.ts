@@ -1,5 +1,5 @@
 /**
- * SightWork pipeline step: `review` (the "reviewing" step).
+ * SiteWork pipeline step: `review` (the "reviewing" step).
  *
  * Takes a finished plan's issues and the proof photos that back
  * them, and asks a model to check each problem against the photos:

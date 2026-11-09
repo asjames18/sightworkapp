@@ -13,7 +13,7 @@ import type { ProblemFilterMode } from "@/lib/client/problemFilter";
  *   - #2 Loose cable across the stage edge, front left of the stage (Fix now; step 3)
  *   - #4 Exit sign out over the side door (Fix soon)
  *
- *   Made with SightWork · sightwork.vercel.app
+ *   Made with SiteWork · sightwork.vercel.app
  */
 export interface ProblemsTextOptions {
   /** Every problem in the plan, for the "2 of 5" line. */

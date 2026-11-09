@@ -25,7 +25,7 @@ test("each paid row sends a quote request, and the Volunteers row has none", asy
     expect(text).toContain("The work:");
     expect(text).toContain("Please reply with:");
     expect(text).toContain("your price, and whether it includes materials");
-    expect(text).toContain("Made with SightWork · https://sightwork.melanatedintech.com");
+    expect(text).toContain("Made with SiteWork · https://sightwork.melanatedintech.com");
     expect(text).not.toMatch(/\$\d/);
     await expectNoSideScroll(page);
     await page.evaluate(() => window.scrollTo(0, 0));

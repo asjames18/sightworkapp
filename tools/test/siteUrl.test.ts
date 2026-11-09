@@ -11,7 +11,7 @@ test("the site url is the host behind https", () => {
 });
 
 test("the volunteer call and quote request end with the same full link line", () => {
-  assert.equal(SIGNOFF_LINE, "Made with SightWork \u00B7 https://sightwork.melanatedintech.com");
+  assert.equal(SIGNOFF_LINE, "Made with SiteWork \u00B7 https://sightwork.melanatedintech.com");
   assert.equal(VOLUNTEER_SIGNOFF, SIGNOFF_LINE);
   assert.equal(QUOTE_SIGNOFF, SIGNOFF_LINE);
 });

@@ -34,7 +34,7 @@ export type LocationCheck =
   | { ok: false; missing: "city" | "state" | "both"; message: string };
 
 export const LOCATION_MESSAGES = {
-  both: "Add the city and state where this space is. SightWork uses them to price the materials and labor.",
+  both: "Add the city and state where this space is. SiteWork uses them to price the materials and labor.",
   city: "Add the city where this space is, so the cost range uses local prices.",
   state: "Pick the state where this space is, so the cost range uses local prices.",
 } as const;

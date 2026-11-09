@@ -1,7 +1,7 @@
 import { findResponseJson } from "../responseJson";
 
 /**
- * SightWork Meta client (Muse Spark via the Meta Model API).
+ * SiteWork Meta client (Muse Spark via the Meta Model API).
  *
  * This is the caller the pipeline steps inject (see src/lib/pipeline):
  * `reason.ts` calls it with frames attached, `cost.ts` calls it with the

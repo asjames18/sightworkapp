@@ -6,11 +6,11 @@ import "./globals.css";
 const inter = Inter({ subsets: ["latin"], display: "swap", variable: "--font-inter" });
 
 export const metadata: Metadata = {
-  title: "SightWork",
+  title: "SiteWork App",
   description: "Film a walkthrough. Get a work plan.",
-  applicationName: "SightWork",
+  applicationName: "SiteWork App",
   // Added to a phone's home screen: keep the short name and the dark status bar.
-  appleWebApp: { capable: true, title: "SightWork", statusBarStyle: "black" },
+  appleWebApp: { capable: true, title: "SiteWork", statusBarStyle: "black" },
 };
 
 export const viewport: Viewport = {
@@ -39,7 +39,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             data-testid="noscript-note"
             className="mx-auto my-4 max-w-xl rounded-2xl border border-ink/30 bg-white px-4 py-3 text-sm leading-6 text-ink print:hidden"
           >
-            <p className="font-semibold">SightWork needs JavaScript.</p>
+            <p className="font-semibold">SiteWork needs JavaScript.</p>
             <p>
               Filming, picking frames and building the plan all happen in your browser. Turn JavaScript on for this
               site, or open it in a current Chrome, Safari, Edge or Firefox, then reload the page.

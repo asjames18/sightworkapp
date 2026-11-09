@@ -1,4 +1,4 @@
-/** Problem links on the "What SightWork checked" rows (checklistLinks.ts). */
+/** Problem links on the "What SiteWork checked" rows (checklistLinks.ts). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { areaProblemRanks, areaProblemsLabel } from "@/lib/client/checklistLinks";

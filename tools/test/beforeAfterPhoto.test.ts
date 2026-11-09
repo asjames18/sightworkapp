@@ -66,9 +66,9 @@ test("beforeAfterName and title: place in the name when there is one", () => {
 });
 
 test("beforeAfterCaptionFor: says where the AI concept is and carries the label", () => {
-  assert.equal(beforeAfterCaptionFor("row", "AI concept, not a render"), "After (right): AI concept, not a render · SightWork");
-  assert.equal(beforeAfterCaptionFor("column", "AI concept, not a render."), "After (bottom): AI concept, not a render · SightWork");
-  assert.equal(beforeAfterCaptionFor("row", "  "), "After (right): AI concept · SightWork");
+  assert.equal(beforeAfterCaptionFor("row", "AI concept, not a render"), "After (right): AI concept, not a render · SiteWork");
+  assert.equal(beforeAfterCaptionFor("column", "AI concept, not a render."), "After (bottom): AI concept, not a render · SiteWork");
+  assert.equal(beforeAfterCaptionFor("row", "  "), "After (right): AI concept · SiteWork");
 });
 
 test("beforeAfterShareText: names the place, says the after is a concept, marks examples, signs off", () => {
@@ -84,7 +84,7 @@ test("beforeAfterShareText: names the place, says the after is a concept, marks 
     ].join("\n"),
   );
   assert.ok(beforeAfterShareText(null, "AI concept").startsWith("Before and after.\n"));
-  assert.ok(beforeAfterShareText("Stage", "AI concept", { sample: true }).includes("From SightWork's example plan."));
+  assert.ok(beforeAfterShareText("Stage", "AI concept", { sample: true }).includes("From SiteWork's example plan."));
   assert.ok(!t.includes("example"));
 });
 

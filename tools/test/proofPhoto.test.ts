@@ -30,8 +30,8 @@ test("boxToPixels: normalized box to pixels, clamped and ordered", () => {
 });
 
 test("withPhotoLine: the photo line sits just before the sign-off", () => {
-  const text = "Problem #1 · Fix now\nLoose cables\n\nMade with SightWork · sightwork.vercel.app";
-  assert.equal(withPhotoLine(text, true), "Problem #1 · Fix now\nLoose cables\nPhoto attached, with the problem outlined.\n\nMade with SightWork · sightwork.vercel.app");
+  const text = "Problem #1 · Fix now\nLoose cables\n\nMade with SiteWork · sightwork.vercel.app";
+  assert.equal(withPhotoLine(text, true), "Problem #1 · Fix now\nLoose cables\nPhoto attached, with the problem outlined.\n\nMade with SiteWork · sightwork.vercel.app");
   assert.equal(withPhotoLine("Just one line", false), "Just one line\nPhoto attached.");
 });
 

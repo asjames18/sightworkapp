@@ -1,5 +1,5 @@
 /**
- * Takes recorded in SightWork's own camera, kept on this device so a walkthrough isn't lost once the
+ * Takes recorded in SiteWork's own camera, kept on this device so a walkthrough isn't lost once the
  * page closes. The video itself is never uploaded (only frames and audio are), so before this a take
  * recorded here was gone after the run.
  *

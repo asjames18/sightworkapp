@@ -262,7 +262,7 @@ export function UploadStep({
     <section>
       <h1 className="text-3xl font-extrabold leading-tight sm:text-4xl">Film a walkthrough. Get a work plan.</h1>
       <p className="mt-3 text-ink/70">
-        Walk the space and say what needs work. Pick its size below for how long to film. SightWork counts what&apos;s there, finds the problems
+        Walk the space and say what needs work. Pick its size below for how long to film. SiteWork counts what&apos;s there, finds the problems
         (including the ones you didn&apos;t mention), and lays out the work in order.
       </p>
 
@@ -517,7 +517,7 @@ export const FILMING_TIPS: { icon: TipIcon; title: string; detail: string }[] = 
   { icon: "distance", title: "Stay 3 to 6 feet from walls", detail: "Close enough for detail, far enough to fit whole items." },
   { icon: "once", title: "Cover each area once", detail: "One pass per area, so items aren\u2019t counted twice." },
   { icon: "pin", title: "Name each area", detail: "Say it as you walk in, like \u201cnow the hallway.\u201d" },
-  { icon: "speak", title: "Point out problems", detail: "Say what needs work. SightWork also looks for what you don\u2019t mention." },
+  { icon: "speak", title: "Point out problems", detail: "Say what needs work. SiteWork also looks for what you don\u2019t mention." },
 ];
 
 function FilmingTips({ aim, label }: { aim: string; label: string }) {
@@ -627,7 +627,7 @@ function CameraIcon() {
 }
 
 /**
- * Example plans before filming: the real SightWork run (sanctuary stage) as the wide card, so the first plan a visitor opens is a
+ * Example plans before filming: the real SiteWork run (sanctuary stage) as the wide card, so the first plan a visitor opens is a
  * real result, then the hand-written samples for other kinds of spaces. Each card says "Real run" or "Sample" so nothing reads as a model result
  * that wasn't one.
  */
@@ -639,7 +639,7 @@ function ExamplePicker({ onPick }: { onPick: (id: string) => void }) {
       <h2 id="examples-heading" className="text-lg font-extrabold">
         See a plan first
       </h2>
-      <p className="mt-1 text-sm text-ink/70">One real SightWork run, plus samples on real photos of other spaces.</p>
+      <p className="mt-1 text-sm text-ink/70">One real SiteWork run, plus samples on real photos of other spaces.</p>
       <ExampleCard example={featured} onPick={onPick} wide />
       <ul className="mt-3 grid grid-cols-1 gap-x-3 sm:grid-cols-2">
         {samples.map((e) => (

@@ -169,7 +169,7 @@ export function buildPlanPdf(JsPDF: JsPdfCtor, plan: WorkPlan, opts: PlanPdfOpti
   const have = new Set(got);
   let y = M;
 
-  doc.setProperties({ title: pdfSafe(`Work plan: ${clean(plan.spaceName)}`), subject: "SightWork work plan", creator: "SightWork" });
+  doc.setProperties({ title: pdfSafe(`Work plan: ${clean(plan.spaceName)}`), subject: "SiteWork work plan", creator: "SiteWork" });
 
   const color = (c: Rgb) => doc.setTextColor(c[0], c[1], c[2]);
   const font = (size: number, style: "normal" | "bold" = "normal", c: Rgb = INK) => {
@@ -249,9 +249,9 @@ export function buildPlanPdf(JsPDF: JsPdfCtor, plan: WorkPlan, opts: PlanPdfOpti
 
   // --- Header -------------------------------------------------------------
   font(11, "bold");
-  doc.text("Sight", M, y + 11);
+  doc.text("Site", M, y + 11);
   font(11, "bold", ACCENT_DARK);
-  doc.text("Work", M + doc.getTextWidth("Sight"), y + 11);
+  doc.text("Work", M + doc.getTextWidth("Site"), y + 11);
   font(9, "normal", MUTED);
   doc.text("Work plan", M + W, y + 11, { align: "right" });
   y += 26;
@@ -692,7 +692,7 @@ export function buildPlanPdf(JsPDF: JsPdfCtor, plan: WorkPlan, opts: PlanPdfOpti
         : plan.meta?.skipped?.cost
         ? "The cost range couldn't be worked out this run. The materials and work steps above are complete."
         : sample
-          ? "This sample has no cost range. On a real run with a city and state, SightWork prices the materials and labor for that area."
+          ? "This sample has no cost range. On a real run with a city and state, SiteWork prices the materials and labor for that area."
           : "No city and state on this run, so there's no cost range.",
       10,
       "normal",
@@ -712,7 +712,7 @@ export function buildPlanPdf(JsPDF: JsPdfCtor, plan: WorkPlan, opts: PlanPdfOpti
   for (let p = 1; p <= pages; p++) {
     doc.setPage(p);
     font(8, "normal", MUTED);
-    const left = sample ? `SightWork \u00B7 ${PDF_SAMPLE_LABEL}` : `SightWork \u00B7 ${SITE_HOST} \u00B7 Check everything in person before work starts`;
+    const left = sample ? `SiteWork \u00B7 ${PDF_SAMPLE_LABEL}` : `SiteWork \u00B7 ${SITE_HOST} \u00B7 Check everything in person before work starts`;
     doc.text(pdfSafe(left), M, PAGE_H - 24);
     doc.text(`Page ${p} of ${pages}`, M + W, PAGE_H - 24, { align: "right" });
   }

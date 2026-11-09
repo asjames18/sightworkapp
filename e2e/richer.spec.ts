@@ -156,7 +156,7 @@ test("richer plan: tiers, where and what, partly backed, SAM outline, cost share
   await shot(page, "closer-look-open", watch);
 
   const checklist = page.getByTestId("checklist");
-  await expect(checklist.getByRole("heading", { name: "What SightWork checked" })).toBeVisible();
+  await expect(checklist.getByRole("heading", { name: "What SiteWork checked" })).toBeVisible();
   await expect(checklist.getByRole("listitem").filter({ hasText: "AV and cables" })).toContainText("1 problem");
   await expect(checklist.getByRole("listitem").filter({ hasText: "Exits and fire safety" })).toContainText("1 problem · 1 to check");
   await expect(checklist.getByRole("list", { name: "Areas with nothing flagged" }).getByRole("listitem").filter({ hasText: "Heating and vents" })).toBeVisible();

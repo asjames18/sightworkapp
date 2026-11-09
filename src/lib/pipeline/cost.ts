@@ -1,5 +1,5 @@
 /**
- * SightWork pipeline step: `estimateCost`.
+ * SiteWork pipeline step: `estimateCost`.
  *
  * Turns the `reason` output (materials + work steps) into a rough,
  * region-grounded cost range (prompt 05 spec: prompt,

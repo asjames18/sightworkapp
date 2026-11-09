@@ -94,7 +94,7 @@ test("the calendar has one event per block with the step, who, what it fixes and
   assert.match(unfolded, /No time estimate in the plan: 2 h held as a placeholder\./);
   assert.match(unfolded, /Who: Flooring contractor/);
   assert.match(unfolded, /DTSTAMP:\d{8}T\d{6}Z/);
-  assert.match(unfolded, /X-WR-CALNAME:SightWork: Sanctuary stage/);
+  assert.match(unfolded, /X-WR-CALNAME:SiteWork: Sanctuary stage/);
   for (const line of ics.split("\r\n")) assert.ok(new TextEncoder().encode(line).length <= 75, line);
 });
 

@@ -10,7 +10,7 @@ const steps = [
     body: "Walk the space slowly, edge to edge. Say what needs work if you like. A silent walkthrough works too.",
   },
   {
-    title: "SightWork looks.",
+    title: "SiteWork looks.",
     body: "It listens to what you said, studies your walkthrough, counts what's in the room, and checks what you said against what it saw.",
   },
   {
@@ -27,7 +27,7 @@ const matched = [
 
 /**
  * "What you get". The cost line and the after-picture tile are left out on purpose: the agreed copy
- * shows them only if the cost step and Muse Image actually run at submission.
+ * shows them only if the cost step and Muse Image actually run.
  */
 const gets = [
   { title: "Problems, worst first.", body: "Safety items rise to the top, each with the frame and second where it shows." },
@@ -61,7 +61,7 @@ const impact = [
   { value: "0", label: "accounts, apps or site visits needed for the first look" },
 ];
 
-/** Fine print. Cost and after-picture lines join only if those steps run at submission. */
+/** Fine print. Cost and after-picture lines join only if those steps run. */
 const finePrint = [
   "Counts are approximate, from what the camera saw.",
   "Your video's frames and narration are sent to the AI providers to build your plan, and we don't keep a copy on our servers. The finished plan is saved on your device.",
@@ -81,7 +81,7 @@ export function Landing() {
       <header className="border-b border-ink/10 pt-[env(safe-area-inset-top)]">
         <div className="mx-auto flex min-h-14 w-full max-w-5xl items-center justify-between gap-3 px-4 sm:px-6">
           <a href="#top" className={`-mx-2 flex min-h-11 items-center rounded-lg px-2 text-xl font-extrabold tracking-tight ${ring}`}>
-            Sight<span className="text-accent">Work</span>
+            Site<span className="text-accent">Work</span>
           </a>
           <Link href="/start" className={`min-h-11 rounded-full border border-ink/20 bg-white/60 px-4 py-2.5 text-sm font-semibold hover:border-ink/40 ${ring}`}>
             Try it
@@ -97,7 +97,7 @@ export function Landing() {
             Walk the room. Get the work plan.
           </h1>
           <p className="mt-5 max-w-2xl text-lg leading-relaxed text-ink/75">
-            Film a walkthrough on your phone, from 30 seconds for a small room to 5 minutes for a warehouse. SightWork counts what&apos;s there, roughly, finds what needs fixing,
+            Film a walkthrough on your phone, from 30 seconds for a small room to 5 minutes for a warehouse. SiteWork counts what&apos;s there, roughly, finds what needs fixing,
             including the problems you didn&apos;t mention, and lays out the work in order, with proof from your own video.
           </p>
           <div className="mt-8 flex flex-col gap-3 sm:flex-row">
@@ -105,7 +105,7 @@ export function Landing() {
             <Link href="/start?view=example&ex=sanctuary" className={secondary}>See a real run</Link>
           </div>
           <LastPlanLink />
-          <p className="mt-4 text-sm text-ink/70">Free to try in this demo. No account needed.</p>
+          <p className="mt-4 text-sm text-ink/70">Open source. No account needed to try an example plan.</p>
           </div>
           <RealRunHero />
         </section>
@@ -116,7 +116,7 @@ export function Landing() {
               Most churches, schools and nonprofits have no facilities staff. They have volunteers and a phone.
             </h2>
             <p className="mt-4 max-w-2xl text-lg leading-relaxed text-white/80">
-              SightWork turns a walkthrough into a plan a volunteer team can pick up on work day: what to fix first, who does it, what to buy,
+              SiteWork turns a walkthrough into a plan a volunteer team can pick up on work day: what to fix first, who does it, what to buy,
               and proof from the video, ready to share or print.
             </p>
             <dl className="mt-8 grid grid-cols-2 gap-x-6 gap-y-6 lg:grid-cols-4">
@@ -159,7 +159,7 @@ export function Landing() {
         <section aria-labelledby="catch-heading" className="border-t border-ink/10 bg-white">
           <div className="mx-auto w-full max-w-5xl px-4 py-12 sm:px-6 md:py-16">
             <h2 id="catch-heading" className="max-w-2xl text-[28px] font-extrabold leading-tight">
-              You mention three things. SightWork finds three more.
+              You mention three things. SiteWork finds three more.
             </h2>
             <ul className="mt-6 grid gap-3">
               {matched.map((row) => (
@@ -172,7 +172,7 @@ export function Landing() {
                     &ldquo;{row.said}&rdquo;
                   </p>
                   <p className="text-base">
-                    <span className="block text-xs font-semibold uppercase tracking-wide text-ink/70">SightWork saw</span>
+                    <span className="block text-xs font-semibold uppercase tracking-wide text-ink/70">SiteWork saw</span>
                     {row.saw}
                   </p>
                 </li>
@@ -238,7 +238,6 @@ export function Landing() {
             <p className="mt-6 text-sm text-ink/70">
               Live config and safeguards: <Link href="/status" className="underline underline-offset-2 hover:text-ink">status page</Link>.
             </p>
-            <p className="mt-6 text-sm text-ink/70">Built for the Meta AI Developer Hackathon 2026.</p>
           </div>
         </section>
 
@@ -257,7 +256,7 @@ export function Landing() {
           <div className="mx-auto w-full max-w-5xl px-4 py-16 sm:px-6">
             <h2 className="text-[28px] font-extrabold leading-tight">Your next walkthrough could be a work plan.</h2>
             <p className="mt-4 max-w-xl text-lg text-white/80">
-              Grab your phone, walk the space for a minute, and see what SightWork finds.
+              Grab your phone, walk the space for a minute, and see what SiteWork finds.
             </p>
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
               <Link
@@ -278,7 +277,7 @@ export function Landing() {
       </main>
 
       <footer className="mx-auto flex w-full max-w-5xl flex-wrap items-center justify-between gap-3 px-4 py-8 text-sm text-ink/70 sm:px-6">
-        <span>Built for the Meta AI Developer Hackathon 2026.</span>
+        <span>SiteWork App · open source · built by Antonio James</span>
         <nav aria-label="Site" className="flex gap-4">
           <Link href="/status" className={`underline underline-offset-2 hover:text-ink ${ring}`}>Status</Link>
           <Link href="/credits" className={`underline underline-offset-2 hover:text-ink ${ring}`}>Image credits</Link>

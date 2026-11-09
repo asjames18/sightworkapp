@@ -16,7 +16,7 @@ test("kitchen example fits whole: every problem, step and material, no cut", () 
   for (const i of rankedIssues(kitchenSample)) assert.ok(text.includes(i.title), i.title);
   for (const s of kitchenSample.workOrder) assert.ok(text.includes(`${s.order}. ${s.title}`), s.title);
   for (const m of kitchenSample.materials) assert.ok(text.includes(m.item), m.item);
-  assert.ok(text.endsWith("Made with SightWork \u00B7 sightwork.vercel.app"));
+  assert.ok(text.endsWith("Made with SiteWork \u00B7 sightwork.vercel.app"));
 });
 
 test("compact pass: one line per problem with a short note, Measure on site said once", () => {
@@ -44,7 +44,7 @@ test("still too long after the compact pass: cut at a line, sign-off kept", () =
   const text = planToText(kitchenSample, { date: DAY, maxChars: 600 });
   assert.ok(text.length <= 600);
   assert.ok(text.includes("Shortened for a text."));
-  assert.ok(text.endsWith("Made with SightWork \u00B7 sightwork.vercel.app"));
+  assert.ok(text.endsWith("Made with SiteWork \u00B7 sightwork.vercel.app"));
   // The cut body is the compact one.
   assert.match(text, /\(high, not mentioned\)/);
 });

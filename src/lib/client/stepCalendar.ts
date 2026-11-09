@@ -137,7 +137,7 @@ export function stepDescription(plan: Pick<WorkPlan, "spaceName" | "issues" | "w
   }
   const after = waitersShareLine(stepsWaitingOn(plan.workOrder, step.order));
   if (after) lines.push(after);
-  lines.push(`From the SightWork plan for ${clean(plan.spaceName) || "this space"}. Times are a starting schedule. Move them as needed.`);
+  lines.push(`From the SiteWork plan for ${clean(plan.spaceName) || "this space"}. Times are a starting schedule. Move them as needed.`);
   return lines.join("\n");
 }
 
@@ -162,10 +162,10 @@ export function planCalendar(
   const lines = [
     "BEGIN:VCALENDAR",
     "VERSION:2.0",
-    "PRODID:-//SightWork//Work steps//EN",
+    "PRODID:-//SiteWork//Work steps//EN",
     "CALSCALE:GREGORIAN",
     "METHOD:PUBLISH",
-    `X-WR-CALNAME:${icsEscape(`SightWork: ${space}${label ? `, ${label}` : ""}`)}`,
+    `X-WR-CALNAME:${icsEscape(`SiteWork: ${space}${label ? `, ${label}` : ""}`)}`,
   ];
   for (const b of scheduleSteps(plan.workOrder, now)) {
     if (keep && !keep.has(b.order)) continue;

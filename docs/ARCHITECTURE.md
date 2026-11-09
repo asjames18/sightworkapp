@@ -1,4 +1,4 @@
-# SightWork architecture
+# SiteWork App architecture
 
 One phone walkthrough in, one work plan out. Every model in the run is a Meta model.
 

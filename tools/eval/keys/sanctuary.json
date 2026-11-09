@@ -1,7 +1,7 @@
 {
   "id": "sanctuary",
   "plan": "src/lib/examples/sanctuary-run.json",
-  "labeledBy": "SightWork team draft, labeled from the 8 frames of the Oct 29 sanctuary walkthrough. Confirm on site before using it as ground truth.",
+  "labeledBy": "SiteWork team draft, labeled from the 8 frames of the Oct 29 sanctuary walkthrough. Confirm on site before using it as ground truth.",
   "items": [
     { "id": "trip-cables", "label": "Loose cables and cords across the stage floor", "severity": "high", "frames": [5, 6, 7], "any": ["cable", "cord"] },
     { "id": "power-strip", "label": "Power strip or exposed wiring loose on the stage floor", "severity": "high", "frames": [6, 7], "any": ["power strip", "wiring", "outlet"] },

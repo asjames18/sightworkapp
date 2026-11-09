@@ -19,7 +19,7 @@ test("said vs saw sends the rows on screen and follows the toggle", async ({ pag
   expect(text.startsWith("Example plan, not a real walkthrough.\nWhat you said vs. what we saw")).toBe(true);
   expect(text).toContain("You didn't mention (3):");
   expect(text).toContain("Matched (3):");
-  expect(text).toContain("Made with SightWork");
+  expect(text).toContain("Made with SiteWork");
 
   await section.getByTestId("said-vs-saw-only-unmentioned").click();
   await expect(button).toHaveAccessibleName("Send what you didn't mention");

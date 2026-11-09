@@ -58,8 +58,8 @@ test("a SAM outline is solid when masks ran", () => {
 });
 
 test("photo line names the problem the step's photo shows, before the sign-off", () => {
-  const text = "Step 1: Tape down cables\nWho: crew\n\nMade with SightWork";
-  assert.equal(withPhotoLine(text, true, "problem #2"), "Step 1: Tape down cables\nWho: crew\nPhoto attached, with problem #2 outlined.\n\nMade with SightWork");
+  const text = "Step 1: Tape down cables\nWho: crew\n\nMade with SiteWork";
+  assert.equal(withPhotoLine(text, true, "problem #2"), "Step 1: Tape down cables\nWho: crew\nPhoto attached, with problem #2 outlined.\n\nMade with SiteWork");
   assert.match(withPhotoLine(text, false, "problem #4"), /Photo attached, showing problem #4\.\n\nMade with/);
   // The problem's own wording is unchanged.
   assert.match(withPhotoLine(text, true), /Photo attached, with the problem outlined\./);

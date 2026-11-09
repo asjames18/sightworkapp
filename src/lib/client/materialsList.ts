@@ -187,7 +187,7 @@ export function shoppingListText(
   }
   const spend = spendLine(materialsSpend(plan, got), { started: have.size > 0, dash: "-" });
   if (spend) lines.push("", spend);
-  lines.push("", need.some(({ m }) => m.unitCost) ? "Prices are rough estimates, not quotes. Made with SightWork." : "Made with SightWork.");
+  lines.push("", need.some(({ m }) => m.unitCost) ? "Prices are rough estimates, not quotes. Made with SiteWork." : "Made with SiteWork.");
   return lines.join("\n");
 }
 

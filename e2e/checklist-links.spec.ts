@@ -1,7 +1,7 @@
 import { test, expect, expectNoAxeViolations, expectNoSideScroll } from "./helpers";
 
 /**
- * "What SightWork checked": each area that turned something up lists its problem numbers, and each number
+ * "What SiteWork checked": each area that turned something up lists its problem numbers, and each number
  * jumps to that problem's card, even when the problem filter has that card hidden.
  */
 test.beforeEach(async ({ apiCalls, pageErrors }) => {

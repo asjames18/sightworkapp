@@ -23,7 +23,7 @@ test("each work step sends just that step", async ({ page, context }) => {
   const text = await page.evaluate(() => navigator.clipboard.readText());
   expect(text.startsWith(`Example plan, not a real inspection.\nStep 1 of ${total}`)).toBe(true);
   expect(text).toMatch(/\nWhen: \w{3}, \w{3} \d+, /);
-  expect(text).toContain("Made with SightWork");
+  expect(text).toContain("Made with SiteWork");
 
   for (const width of [375, 768, 1280]) {
     await page.setViewportSize({ width, height: 800 });

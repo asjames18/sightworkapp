@@ -1,5 +1,5 @@
 /**
- * SightWork SAM 3.1 caller (segment step).
+ * SiteWork SAM 3.1 caller (segment step).
  *
  * This is the caller the segment step injects (see src/lib/pipeline/segment.ts):
  * one concept on one frame per request, over the Meta Responses API.

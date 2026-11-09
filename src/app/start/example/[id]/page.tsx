@@ -14,7 +14,7 @@ export function generateStaticParams() {
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
   const example = findExample((await params).id);
   return {
-    title: `${example.title}: ${example.kind === "real" ? "real run" : "sample plan"} | SightWork`,
+    title: `${example.title}: ${example.kind === "real" ? "real run" : "sample plan"} | SiteWork`,
     description: example.blurb,
   };
 }

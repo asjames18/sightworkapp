@@ -1,6 +1,8 @@
-# How SightWork maps to the judging criteria
+> Historical note (Nov 9, 2026): written for the Meta AI Developer Hackathon judging criteria. SiteWork App is now a product; this doc is kept for history.
 
-Criteria and weights from the Official Rules embedded on the [Cerebral Valley event page](https://cerebralvalley.ai/e/meta-ai-developer-hackathon): **Impact 30%** (real-world potential and fit), **Demo 25%** (works, holds up live, quality of the demo video), **Use of Meta AI tooling 25%** (creative, beyond a basic integration), **Technical depth 20%**. SightWork is on the **Startup track**, "judged on technical execution and whether it holds up in production", under the theme **Build for Your World**.
+# How SiteWork App maps to the judging criteria
+
+Criteria and weights from the Official Rules embedded on the [Cerebral Valley event page](https://cerebralvalley.ai/e/meta-ai-developer-hackathon): **Impact 30%** (real-world potential and fit), **Demo 25%** (works, holds up live, quality of the demo video), **Use of Meta AI tooling 25%** (creative, beyond a basic integration), **Technical depth 20%**. SiteWork is on the **Startup track**, "judged on technical execution and whether it holds up in production", under the theme **Build for Your World**.
 
 ## Impact (30%)
 - Who it helps: churches, schools and nonprofits that run on volunteers and have no facilities staff, plus small contractors scoping a job.

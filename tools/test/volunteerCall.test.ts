@@ -48,7 +48,7 @@ test("call for help names the work, the hours, the sharing, the wait on a trade 
   assert.match(text, /Supplies we will need:\n- Cable cover: 2\n- Eggshell paint: 1 gal/);
   assert.doesNotMatch(text, /exit sign: 1|LED exit sign/);
   assert.match(text, /Reply if you can help, and tell us which days work for you\./);
-  assert.ok(text.endsWith("Made with SightWork \u00B7 https://sightwork.melanatedintech.com"));
+  assert.ok(text.endsWith("Made with SiteWork \u00B7 https://sightwork.melanatedintech.com"));
   assert.doesNotMatch(text, /vercel\.app/);
 });
 
@@ -92,7 +92,7 @@ test("a long call is cut at a line under the limit and keeps the sign-off", () =
   const text = volunteerCallText(p, volunteers(p), { date, maxChars: 600 })!;
   assert.ok(text.length <= 600);
   assert.match(text, /Shortened for a text\./);
-  assert.ok(text.endsWith("Made with SightWork \u00B7 https://sightwork.melanatedintech.com"));
+  assert.ok(text.endsWith("Made with SiteWork \u00B7 https://sightwork.melanatedintech.com"));
   assert.doesNotMatch(text, /vercel\.app/);
 });
 
