@@ -1,8 +1,14 @@
 import type { NextConfig } from "next";
+import { buildCsp, byokFlagOn } from "./src/lib/csp";
 
 // The app moved from / to /start when the landing page took /. Old deep links keep working:
 // any of these query keys on / sends the visitor to /start with the query string kept as is.
 const legacyAppQueryKeys = ["view", "mock", "runner", "fail"];
+
+const csp = buildCsp({
+  byok: byokFlagOn(process.env.NEXT_PUBLIC_SIGHTWORK_BYOK),
+  dev: process.env.NODE_ENV === "development",
+});
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
@@ -32,14 +38,14 @@ const nextConfig: NextConfig = {
       fallback: [],
     };
   },
-  // Baseline security headers on every response. The CSP here only covers framing, plugins, <base> and form
-  // targets, so it cannot block the app's own scripts, styles, camera, blob video or data images.
+  // Security headers on every response. The CSP (src/lib/csp.ts) keeps scripts, styles and requests on this
+  // site; with own-key mode on, the browser may also reach the Meta API host and nothing else.
   async headers() {
     return [
       {
         source: "/:path*",
         headers: [
-          { key: "Content-Security-Policy", value: "frame-ancestors 'none'; object-src 'none'; base-uri 'self'; form-action 'self'" },
+          { key: "Content-Security-Policy", value: csp },
           { key: "X-Frame-Options", value: "DENY" },
           { key: "X-Content-Type-Options", value: "nosniff" },
           { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
