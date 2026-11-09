@@ -94,7 +94,7 @@ Before filming, pick how big the space is. The size sets the recommended length,
 Every size sends at most 48 frames, spread over the actual clip: takes up to 45 s get about one frame per 1.25 s, longer ones one every 2 s until that would pass 48, then evenly spread (about one every 2.5 s at 2 minutes, 3.8 s at 3 minutes and 6.4 s at 5 minutes). Anything under 5 seconds is refused for every size.
 
 ## Built during the hackathon
-Everything up to the [v1.0-hackathon](https://github.com/asjames18/sightwork-hackathon/releases/tag/v1.0-hackathon) release, the version submitted for judging, was written during the event (Oct 26 – Nov 4, 2026). The idea and planning came before; no earlier code is included. Antonio built SightWork with AI coding assistance and deploys it himself.
+Everything up to the [v1.0-hackathon](https://github.com/asjames18/sightwork-hackathon/releases/tag/v1.0-hackathon) release, the version submitted for judging, was written during the event (Oct 26 – Nov 4, 2026). The idea and planning came before; no earlier code is included.
 
 ## Full details
 Setup and test commands, preview links, how real runs work, every plan screen feature, and the status page: [docs/DETAILS.md](docs/DETAILS.md).
