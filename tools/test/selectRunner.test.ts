@@ -5,7 +5,7 @@
 import { test, describe, afterEach } from "node:test";
 import assert from "node:assert/strict";
 import { ownVideoRunnerKind, needsTesterCode, planJobFor, pickRunnerKind, hasOwnKeyHere } from "@/lib/client/selectRunner";
-import { byokPlanJob, BYOK_NOT_READY_MESSAGE } from "@/lib/client/byokPlanJob";
+import { byokPlanJob, NO_KEY_MESSAGE } from "@/lib/client/byokPlanJob";
 import { mockPlanJob } from "@/lib/client/planJob";
 import { messageForStatus, TESTER_CODE_MESSAGE, WRONG_CODE_MESSAGE, isTesterCodeFailure, createApiPlanJob } from "@/lib/client/apiPlanJob";
 import { EXAMPLES } from "@/lib/examples";
@@ -145,7 +145,7 @@ describe("own-key runner", () => {
     assert.notEqual(planJobFor("own"), mockPlanJob);
     assert.notEqual(planJobFor("own"), planJobFor("api"));
   });
-  test("until the browser runner lands, it stops at once with a plain message and spends nothing", async () => {
+  test("with no key saved, the own-key runner stops before reading the video and spends nothing", async () => {
     const seen: PlanJobStatus[] = [];
     const realFetch = globalThis.fetch;
     let calls = 0;
@@ -156,10 +156,9 @@ describe("own-key runner", () => {
       globalThis.fetch = realFetch;
     }
     assert.equal(calls, 0);
-    assert.equal(seen.length, 1);
-    assert.equal(seen[0].state, "failed");
-    assert.equal(seen[0].state === "failed" && seen[0].message, BYOK_NOT_READY_MESSAGE);
-    assert.match(BYOK_NOT_READY_MESSAGE, /Nothing was sent anywhere/);
+    const last = seen.at(-1);
+    assert.equal(last?.state, "failed");
+    assert.equal(last?.state === "failed" && last.message, NO_KEY_MESSAGE);
   });
   test("an aborted run reports nothing", async () => {
     const seen: PlanJobStatus[] = [];
