@@ -57,6 +57,7 @@ export default defineConfig({
         // Set (even empty) values win over .env.local, so a local key file can't turn on real runs here.
         env: {
           NEXT_PUBLIC_SIGHTWORK_RUNNER: "mock",
+          NEXT_PUBLIC_SIGHTWORK_BYOK: "on",
           SIGHTWORK_TEST_CODE: "",
           META_API_KEY: "",
           MODEL_API_KEY: "",
