@@ -3,8 +3,11 @@ import { createApiPlanJob } from "./apiPlanJob";
 import { createBuildPlanRequest, requestBudgetBytes } from "./buildPlanRequest";
 import { narrationChunkMaxSec } from "./narrationChunks";
 import { savedSpaceRequestFields } from "./spaceType";
+import { byokPlanJob } from "./byokPlanJob";
+import { byokEnabled, loadKey } from "./byokKey";
 
-export type RunnerKind = "mock" | "api";
+/** "own" runs on the user's own Meta key, in this browser (byokPlanJob.ts); "api" runs on SightWork's server. */
+export type RunnerKind = "mock" | "api" | "own";
 
 /**
  * Which runner the flow uses. The mock stays the default until /api/plan is live.
@@ -65,13 +68,16 @@ const lightApiPlanJob = createApiPlanJob(
  * - `?runner=mock` (or `?runner=api` to force a real run), which wins over everything else;
  * - the preview-only switches `?fail=<step>` and `?mock=nometa`;
  * - a build with NEXT_PUBLIC_SIGHTWORK_RUNNER=mock set explicitly (the local e2e build).
- * A real run still needs the tester code (see needsTesterCode), so nothing is spent without it.
+ * When own-key mode is on and a key is saved in this browser (`hasOwnKey`), the run goes to the own-key
+ * runner instead of SightWork's server; the query switches above still win, so previews keep working.
+ * A server run still needs the tester code (see needsTesterCode), so nothing is spent without it.
  */
-export function ownVideoRunnerKind(search: string | null, envValue: string | undefined): RunnerKind {
+export function ownVideoRunnerKind(search: string | null, envValue: string | undefined, hasOwnKey = false): RunnerKind {
   const q = search ? new URLSearchParams(search) : null;
   const fromQuery = q?.get("runner");
   if (fromQuery === "api" || fromQuery === "mock") return fromQuery;
   if (q && (q.has("fail") || q.has("mock"))) return "mock";
+  if (hasOwnKey) return "own";
   return envValue?.trim().toLowerCase() === "mock" ? "mock" : "api";
 }
 
@@ -82,6 +88,7 @@ export function needsTesterCode(kind: RunnerKind, savedCode: string): boolean {
 
 /** The runner for a kind. Stable references, so a run only restarts when the video or run number changes. */
 export function planJobFor(kind: RunnerKind, light = false): PlanJobRunner {
+  if (kind === "own") return byokPlanJob;
   if (kind !== "api") return mockPlanJob;
   return light ? lightApiPlanJob : apiPlanJob;
 }
@@ -89,5 +96,11 @@ export function planJobFor(kind: RunnerKind, light = false): PlanJobRunner {
 /** The runner kind for a video the user brought, read in the browser for this page load. */
 export function currentOwnVideoRunnerKind(): RunnerKind {
   const search = typeof window === "undefined" ? null : window.location.search;
-  return ownVideoRunnerKind(search, process.env.NEXT_PUBLIC_SIGHTWORK_RUNNER);
+  return ownVideoRunnerKind(search, process.env.NEXT_PUBLIC_SIGHTWORK_RUNNER, hasOwnKeyHere());
+}
+
+/** Own-key mode is on for this build and a key is saved in this browser. Reads the key's presence only. */
+export function hasOwnKeyHere(): boolean {
+  if (typeof window === "undefined" || !byokEnabled()) return false;
+  return loadKey() !== "";
 }

@@ -4,7 +4,8 @@
  */
 import { test, describe, afterEach } from "node:test";
 import assert from "node:assert/strict";
-import { ownVideoRunnerKind, needsTesterCode, planJobFor, pickRunnerKind } from "@/lib/client/selectRunner";
+import { ownVideoRunnerKind, needsTesterCode, planJobFor, pickRunnerKind, hasOwnKeyHere } from "@/lib/client/selectRunner";
+import { byokPlanJob, BYOK_NOT_READY_MESSAGE } from "@/lib/client/byokPlanJob";
 import { mockPlanJob } from "@/lib/client/planJob";
 import { messageForStatus, TESTER_CODE_MESSAGE, WRONG_CODE_MESSAGE, isTesterCodeFailure, createApiPlanJob } from "@/lib/client/apiPlanJob";
 import { EXAMPLES } from "@/lib/examples";
@@ -117,4 +118,65 @@ describe("why the bug happened: the preview runner ignores the video", () => {
       }
     });
   }
+});
+
+describe("own-key runner", () => {
+  test("a saved key with own-key mode on sends the user's video to the own-key runner", () => {
+    assert.equal(ownVideoRunnerKind("", undefined, true), "own");
+    assert.equal(ownVideoRunnerKind("", "mock", true), "own");
+    assert.equal(ownVideoRunnerKind("", "api", true), "own");
+  });
+  test("no key keeps today's choice", () => {
+    assert.equal(ownVideoRunnerKind("", undefined, false), "api");
+    assert.equal(ownVideoRunnerKind("", "mock", false), "mock");
+  });
+  test("query switches still win, so previews and forced server runs keep working", () => {
+    assert.equal(ownVideoRunnerKind("?runner=api", undefined, true), "api");
+    assert.equal(ownVideoRunnerKind("?runner=mock", undefined, true), "mock");
+    assert.equal(ownVideoRunnerKind("?fail=planning", undefined, true), "mock");
+    assert.equal(ownVideoRunnerKind("?mock=nometa", undefined, true), "mock");
+  });
+  test("an own-key run never asks for the tester code", () => {
+    assert.equal(needsTesterCode("own", ""), false);
+  });
+  test("the own-key runner is its own stable runner", () => {
+    assert.equal(planJobFor("own"), byokPlanJob);
+    assert.equal(planJobFor("own", true), byokPlanJob);
+    assert.notEqual(planJobFor("own"), mockPlanJob);
+    assert.notEqual(planJobFor("own"), planJobFor("api"));
+  });
+  test("until the browser runner lands, it stops at once with a plain message and spends nothing", async () => {
+    const seen: PlanJobStatus[] = [];
+    const realFetch = globalThis.fetch;
+    let calls = 0;
+    globalThis.fetch = (async () => { calls++; throw new Error("no network in this test"); }) as typeof fetch;
+    try {
+      await byokPlanJob({ file: recorded, onStatus: (s) => seen.push(s), signal: new AbortController().signal });
+    } finally {
+      globalThis.fetch = realFetch;
+    }
+    assert.equal(calls, 0);
+    assert.equal(seen.length, 1);
+    assert.equal(seen[0].state, "failed");
+    assert.equal(seen[0].state === "failed" && seen[0].message, BYOK_NOT_READY_MESSAGE);
+    assert.match(BYOK_NOT_READY_MESSAGE, /Nothing was sent anywhere/);
+  });
+  test("an aborted run reports nothing", async () => {
+    const seen: PlanJobStatus[] = [];
+    const ac = new AbortController();
+    ac.abort();
+    await byokPlanJob({ file: chosen, onStatus: (s) => seen.push(s), signal: ac.signal });
+    assert.equal(seen.length, 0);
+  });
+  test("hasOwnKeyHere is false on the server and when own-key mode is off", () => {
+    assert.equal(hasOwnKeyHere(), false);
+    const prev = process.env.NEXT_PUBLIC_SIGHTWORK_BYOK;
+    try {
+      delete process.env.NEXT_PUBLIC_SIGHTWORK_BYOK;
+      fakeWindow("");
+      assert.equal(hasOwnKeyHere(), false);
+    } finally {
+      if (prev === undefined) delete process.env.NEXT_PUBLIC_SIGHTWORK_BYOK; else process.env.NEXT_PUBLIC_SIGHTWORK_BYOK = prev;
+    }
+  });
 });
