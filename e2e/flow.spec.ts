@@ -305,12 +305,12 @@ test("processing: running clock and tab title follow the run, the screen is kept
   await expect(page.getByRole("heading", { level: 1, name: "Working on your plan" })).toBeVisible();
   await expect(page.getByText(/^\d+:\d\d\s*\d+ seconds? elapsed$/)).toBeVisible();
   await expect(page.getByText(/we'll keep your screen on/)).toBeVisible();
-  await expect(page).toHaveTitle(/^Step \d of \d · SiteWork$/);
+  await expect(page).toHaveTitle(/^Step \d of \d · SightWork$/);
   await expect.poll(async () => (await wake()).requested).toBeGreaterThan(0);
   await expectNoSideScroll(page);
 
   await expect(page.getByRole("heading", { level: 1, name: "We couldn't finish your plan" })).toBeVisible({ timeout: 30_000 });
-  await expect(page).toHaveTitle("Stopped · SiteWork");
+  await expect(page).toHaveTitle("Stopped · SightWork");
   await expect(page.getByText(/in total$/)).toBeVisible();
   await expect.poll(async () => (await wake()).released).toBeGreaterThan(0);
   // Mock steps finish in under a second, so no step shows a time (no "0 s" noise); real steps show "· 12 s".

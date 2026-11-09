@@ -140,7 +140,7 @@ export function ProcessingStep({
     };
   }, []);
   useEffect(() => {
-    document.title = failed ? "Stopped · SiteWork" : `Step ${position} of ${total} · SiteWork`;
+    document.title = failed ? "Stopped · SightWork" : `Step ${position} of ${total} · SightWork`;
   }, [failed, position, total]);
   return (
     <section>
@@ -325,7 +325,7 @@ export function ProcessingStep({
 }
 
 /**
- * On a stopped run: a take recorded in SiteWork's camera is still kept on this device, so say so and
+ * On a stopped run: a take recorded in SightWork's camera is still kept on this device, so say so and
  * offer Save video. Nothing shows for a video picked from the library or files.
  */
 function FailedTakeNote({ file }: { file: File }) {

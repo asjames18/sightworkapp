@@ -45,7 +45,7 @@ test("Send this problem attaches the outlined proof photo on a phone", async ({ 
   expect(file.size).toBeGreaterThan(5_000);
   expect(file.width).toBeGreaterThan(300);
   expect(shared.text).toContain("Photo attached, with the problem outlined.");
-  expect(shared.text.indexOf("Photo attached")).toBeLessThan(shared.text.indexOf("Made with SiteWork"));
+  expect(shared.text.indexOf("Photo attached")).toBeLessThan(shared.text.indexOf("Made with SightWork"));
   await expectNoSideScroll(page);
 });
 

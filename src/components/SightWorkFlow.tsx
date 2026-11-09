@@ -149,15 +149,15 @@ export function SightWorkFlow({ initialExampleId }: { initialExampleId?: string 
       <header className="sticky top-0 z-20 print:hidden border-b border-ink/10 bg-paper pt-[env(safe-area-inset-top)]">
         <div className={`mx-auto flex min-h-14 w-full flex-wrap items-center justify-between gap-x-3 gap-y-1 px-4 py-1 sm:px-6 ${width}`}>
           {/* The tagline sits beside the button, not in it, so the button's spoken name starts with the
-              word you see ("SiteWork"), as voice-control users expect. */}
+              word you see ("SightWork"), as voice-control users expect. */}
           <div className="flex min-w-0 items-center gap-2">
             <button
               type="button"
               onClick={startOver}
-              aria-label="SiteWork, start a new walkthrough"
+              aria-label="SightWork, start a new walkthrough"
               className="-mx-2 flex min-h-11 items-center rounded-lg px-2 text-xl font-extrabold tracking-tight focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
             >
-              Site<span className="text-accent">Work</span>
+              Sight<span className="text-accent">Work</span>
             </button>
             {/* The upload screen's H1 already says this, and on the plan the header is full with Save PDF and
                 New walkthrough, so the tagline only shows while processing (from lg, on one line). */}

@@ -1,5 +1,5 @@
 /**
- * SiteWork pipeline step: `transcribe`.
+ * SightWork pipeline step: `transcribe`.
  *
  * Turns the narration WAV from a PlanRequest into the transcript lines
  * the reason step reads (prompt 01

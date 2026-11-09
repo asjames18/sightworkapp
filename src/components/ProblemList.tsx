@@ -735,7 +735,7 @@ function Checklist({ issues, watch }: { issues: Issue[]; watch: WatchItem[] }) {
   return (
     <section aria-labelledby="checklist-heading" className="mt-6 rounded-2xl border border-ink/10 bg-white p-5 break-inside-avoid" data-testid="checklist">
       <h3 id="checklist-heading" className="font-extrabold">
-        What SiteWork checked
+        What SightWork checked
       </h3>
       <p className="mt-0.5 text-sm text-ink/65">
         The plan step went through {rows.length} areas in every frame.{" "}

@@ -28,7 +28,7 @@ test("Send these to check hands over the closer-look finds", async ({ page, cont
   expect(text).toContain("\n- Ladder and boards left standing in the walkway (Middle of the kitchen floor, 40% sure)\n");
   expect(text).toContain("\n- Loose wire on the floor by the fireplace (Hearth, by the paint bucket, 36% sure)\n");
   expect(text).toContain("\n  A thin wire lies across the floor at the hearth. Check whether it is old or live wiring");
-  expect(text).toContain("Made with SiteWork");
+  expect(text).toContain("Made with SightWork");
 
   for (const width of [375, 768, 1280]) {
     await page.setViewportSize({ width, height: 800 });

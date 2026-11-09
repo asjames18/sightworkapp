@@ -32,7 +32,7 @@ test("with the filter on, Send these N sends just the problems shown", async ({ 
   expect(ranks).toHaveLength(unmentioned);
   for (const rank of ranks) expect(text).toContain(`\n- #${rank} `);
   expect(lines.filter((l) => l.startsWith("- #"))).toHaveLength(unmentioned);
-  expect(text).toContain("Made with SiteWork");
+  expect(text).toContain("Made with SightWork");
 
   for (const width of [375, 768, 1280]) {
     await page.setViewportSize({ width, height: 800 });

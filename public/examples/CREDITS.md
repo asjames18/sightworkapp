@@ -1,18 +1,18 @@
 # Example image credits
 
 ## Real run (public/examples/sanctuary-walk/)
-Frames and the AI after picture come from a real SiteWork run on a 2:28 narrated walkthrough filmed by the SiteWork
+Frames and the AI after picture come from a real SightWork run on a 2:28 narrated walkthrough filmed by the SightWork
 team in a church sanctuary on Nov 2, 2026, with the church's permission to film. The church's logo and sign lettering
 are covered in the one frame that shows them (f15). Not for reuse.
 
 ## Earlier real run (public/examples/sanctuary/)
-Frames and the AI after picture from the first real SiteWork run, on a 44-second walkthrough of the same sanctuary
+Frames and the AI after picture from the first real SightWork run, on a 44-second walkthrough of the same sanctuary
 filmed Oct 29, 2026, with the church's permission. The church's logo on the pulpit is covered in every frame. The
 tests and the eval answer key still use this run. Not for reuse.
 
 ## Featured sample: kitchen renovation (public/examples/kitchen/)
 Seven photos of one older-home kitchen renovation, all CC0 1.0 by Tomwsulcer on Wikimedia Commons. Resized and
-converted to WebP. The narration and the plan on them are hand-written samples, not a SiteWork run.
+converted to WebP. The narration and the plan on them are hand-written samples, not a SightWork run.
 
 | File | Source | Author | License |
 | --- | --- | --- | --- |
@@ -27,7 +27,7 @@ converted to WebP. The narration and the plan on them are hand-written samples, 
 ## Other sample photos (public/examples/samples/)
 All three are CC0 1.0 (public domain dedication, free for commercial use, no attribution required).
 We credit the authors anyway. Cropped, resized and converted to WebP. The plans shown on them are
-hand-written samples, not SiteWork runs.
+hand-written samples, not SightWork runs.
 
 | File | Source | Author | License |
 | --- | --- | --- | --- |

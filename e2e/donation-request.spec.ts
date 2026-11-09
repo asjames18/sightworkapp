@@ -23,7 +23,7 @@ test("the shopping list can send a donation request for what is still needed", a
     expect(text).toMatch(/^Donation request: /);
     expect(text).toContain("donate, or give us a discount on");
     expect(text).toContain("Please reply with:");
-    expect(text).toContain("Made with SiteWork · https://sightwork.melanatedintech.com");
+    expect(text).toContain("Made with SightWork · https://sightwork.melanatedintech.com");
     expect(text).not.toMatch(/\$\d/);
     await expectNoSideScroll(page);
     await expectNoAxeViolations(page, `donation request ${width}`);

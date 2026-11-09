@@ -40,7 +40,7 @@ export function lightVerdict(stats: (LumaStats | null)[]): LightVerdict {
 }
 
 export const DARK_TAKE_MESSAGE =
-  "This video looks dark for most of the walk, so SiteWork may miss damage in the shadows. If you can, turn the lights on and film again. You can still go ahead with this one.";
+  "This video looks dark for most of the walk, so SightWork may miss damage in the shadows. If you can, turn the lights on and film again. You can still go ahead with this one.";
 
 export const BLANK_PREVIEW_MESSAGE =
   "This video looks black from start to end. Check the lens isn't covered and the lights are on, then film it again.";

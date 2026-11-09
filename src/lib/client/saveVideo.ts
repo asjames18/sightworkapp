@@ -58,7 +58,7 @@ export function keptTakeNote(kept: boolean, phone: boolean): string {
 }
 
 /**
- * The line on a stopped run's card for a take recorded in SiteWork's camera. The video is never
+ * The line on a stopped run's card for a take recorded in SightWork's camera. The video is never
  * uploaded, so a failed run doesn't lose it; this says so and points at Save video. Null for a video
  * picked from the phone's library or files (it's already there).
  */

@@ -28,7 +28,7 @@ for (const width of [375, 768, 1280]) {
     await expect(page.getByRole("heading", { level: 1, name: "Working on your plan" })).toBeVisible();
     await setHidden(page, true);
     await expect(page.getByRole("heading", { name: "Problems, worst first" })).toBeVisible({ timeout: 30_000 });
-    await expect(page).toHaveTitle(/^Plan ready: \d+ problems? · SiteWork$/);
+    await expect(page).toHaveTitle(/^Plan ready: \d+ problems? · SightWork$/);
     await setHidden(page, false);
     await expect(page).toHaveTitle(startTitle);
     await expectNoSideScroll(page);

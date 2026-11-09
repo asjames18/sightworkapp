@@ -23,7 +23,7 @@ for (const width of [375, 768, 1280]) {
     await page.goto("/start?view=last");
     await expect(page.getByRole("heading", { name: "Problems, worst first" })).toBeVisible({ timeout: 30_000 });
     const space = (await page.getByRole("heading", { level: 1 }).innerText()).replace(/\s+/g, " ").trim();
-    const expected = /\bplan$/i.test(space) ? `${space} | SiteWork` : `${space} plan | SiteWork`;
+    const expected = /\bplan$/i.test(space) ? `${space} | SightWork` : `${space} plan | SightWork`;
     await expect(page).toHaveTitle(expected);
     await expectNoSideScroll(page);
     await expectNoAxeViolations(page, `reopened plan title (${width} px)`);
@@ -35,6 +35,6 @@ test("example page keeps its own title", async ({ page }) => {
   await page.goto("/start?view=example");
   await expect(page.getByRole("heading", { name: "Problems, worst first" })).toBeVisible({ timeout: 30_000 });
   const space = (await page.getByRole("heading", { level: 1 }).innerText()).replace(/\s+/g, " ").trim();
-  await expect(page).not.toHaveTitle(`${space} plan | SiteWork`);
-  await expect(page).toHaveTitle(/\| SiteWork$/);
+  await expect(page).not.toHaveTitle(`${space} plan | SightWork`);
+  await expect(page).toHaveTitle(/\| SightWork$/);
 });

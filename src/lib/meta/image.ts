@@ -1,5 +1,5 @@
 /**
- * SiteWork Muse Image caller (renderAfter step).
+ * SightWork Muse Image caller (renderAfter step).
  *
  * This is the caller the renderAfter step injects (see
  * src/lib/pipeline/renderAfter.ts): one hero-frame edit per request,

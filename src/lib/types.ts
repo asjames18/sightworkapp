@@ -1,5 +1,5 @@
 /**
- * SiteWork plan output format: the shared contract between the frame
+ * SightWork plan output format: the shared contract between the frame
  * sampler, the Meta pipeline (src/lib/pipeline, src/lib/meta), the API
  * routes, and the UI. Mock data and the real pipeline must both match it.
  *

@@ -23,6 +23,6 @@ export function noNarrationNote(plan: WorkPlan): { lead: string; hint: string } 
   }
   return {
     lead: "No narration in this video, so everything here comes from what the camera saw.",
-    hint: "Talk through what you're worried about next time and SiteWork will compare what you said with what it sees.",
+    hint: "Talk through what you're worried about next time and SightWork will compare what you said with what it sees.",
   };
 }

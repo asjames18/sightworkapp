@@ -71,13 +71,13 @@ test("the shopping list lists only what's still needed, with quantity, problems 
   assert.ok(all.includes("[ ] Cable cover, 6 ft: 2 (for #1; about $25-$40 each)"));
   assert.ok(all.includes("[ ] Gaffer tape: 1 roll (for #1, #3)"));
   assert.ok(all.includes("[ ] Handrail kit: 1 (about $80 each; match the step width)"));
-  assert.ok(all.endsWith("Prices are rough estimates, not quotes. Made with SiteWork."));
+  assert.ok(all.endsWith("Prices are rough estimates, not quotes. Made with SightWork."));
 
   const left = shoppingListText(plan, [0, 2]);
   assert.ok(left.includes("1 still needed, 2 already in hand."));
   assert.ok(left.includes("Gaffer tape"));
   assert.ok(!left.includes("Cable cover") && !left.includes("Handrail"));
-  assert.ok(left.endsWith("\nMade with SiteWork."), "no price note when nothing left is priced");
+  assert.ok(left.endsWith("\nMade with SightWork."), "no price note when nothing left is priced");
 
   assert.equal(shoppingListText(plan, [0, 1, 2]), "");
   assert.ok(shoppingListText(plan, [], { sample: true }).includes("(Example plan with sample data, not a real run.)"));

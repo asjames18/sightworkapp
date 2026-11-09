@@ -19,7 +19,7 @@ import { SHARE_SIGNOFF } from "@/lib/client/planText";
  *   About 2–3 h of work · about $120–$300 of the estimate
  *   Start here: 1 of 2 done.
  *
- *   Made with SiteWork · sightwork.vercel.app
+ *   Made with SightWork · sightwork.vercel.app
  */
 export interface FixFirstTextOptions {
   stepCosts?: Map<number, CostShare> | null;

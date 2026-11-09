@@ -23,7 +23,7 @@ export function SpacePicker() {
         What kind of space? <span className="font-normal text-ink/65">(optional)</span>
       </legend>
       <p id={`${id}-hint`} className="mt-0.5 text-xs text-ink/70">
-        Helps SiteWork check what matters in this kind of space. Saved on this device.
+        Helps SightWork check what matters in this kind of space. Saved on this device.
       </p>
       <div className="mt-2 grid grid-cols-1 gap-2 min-[400px]:grid-cols-2">
         <div className="min-w-0">

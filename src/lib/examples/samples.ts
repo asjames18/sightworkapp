@@ -1,6 +1,6 @@
 /**
  * SAMPLE PLANS, written by hand. Each one sits on a single free stock photo (CC0, see
- * public/examples/CREDITS.md) to show what a SiteWork plan looks like for a different kind of space.
+ * public/examples/CREDITS.md) to show what a SightWork plan looks like for a different kind of space.
  * Each carries the richer findings (tier, where, what the photo shows, checklist key, one closer-look find),
  * all read off the photo itself. They are NOT model runs: no SAM counts, no Muse Spark plan, no after picture, no cost. Counts are
  * what is visible in the one photo, and hours are illustrative. The UI labels every one "Sample".

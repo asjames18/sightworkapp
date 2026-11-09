@@ -16,7 +16,7 @@ test.describe("scripts off", () => {
       await page.goto("/");
       const note = page.getByTestId("noscript-note");
       await expect(note).toBeVisible();
-      await expect(note).toContainText("SiteWork needs JavaScript.");
+      await expect(note).toContainText("SightWork needs JavaScript.");
       await expectNoSideScroll(page);
     });
   }

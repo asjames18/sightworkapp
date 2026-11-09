@@ -46,7 +46,7 @@ test("Send this step attaches the outlined photo of the problem it fixes", async
   expect(s.files[0].size).toBeGreaterThan(5_000);
   const rank = s.files[0].name.match(/problem-(\d+)/)![1];
   expect(s.text).toMatch(new RegExp(`Photo attached, (with problem #${rank} outlined|showing problem #${rank})\\.`));
-  expect(s.text.indexOf("Photo attached")).toBeLessThan(s.text.indexOf("Made with SiteWork"));
+  expect(s.text.indexOf("Photo attached")).toBeLessThan(s.text.indexOf("Made with SightWork"));
   await expectNoSideScroll(page);
 });
 

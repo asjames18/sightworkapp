@@ -49,7 +49,7 @@ test("problems in plain words, worst first; steps in order; materials", () => {
 
 test("ends with where it came from, never a dead-end pointer to photos", () => {
   const t = planToText(plan(), { date: DAY });
-  assert.match(t, /\n\nMade with SiteWork · sightwork\.vercel\.app$/);
+  assert.match(t, /\n\nMade with SightWork · sightwork\.vercel\.app$/);
   assert.doesNotMatch(t, /Proof photos are in the full plan/);
   assert.match(planToText(plan(), { date: DAY, pdfAttached: true }), /\n\nFull plan with proof photos in the attached PDF\.$/);
 });
@@ -78,7 +78,7 @@ test("fits a text message by default; long plans are cut at a line and keep the 
   const many = Array.from({ length: 200 }, (_, i) => ({ order: i + 1, title: `Step number ${i + 1} with some words`, detail: "" }));
   const t = planToText(plan({ workOrder: many }));
   assert.ok(t.length <= MAX_SHARE_CHARS && MAX_SHARE_CHARS <= 1600, `length ${t.length}`);
-  assert.match(t, /\n\.\.\.\nShortened for a text\.\n\nMade with SiteWork · sightwork\.vercel\.app$/);
+  assert.match(t, /\n\.\.\.\nShortened for a text\.\n\nMade with SightWork · sightwork\.vercel\.app$/);
   assert.match(t.split("\n...\n")[0], /\n\d+\. Step number \d+ with some words$/, "cut at a whole line");
   const withPdf = planToText(plan({ workOrder: many }), { maxChars: 800, pdfAttached: true });
   assert.ok(withPdf.length <= 800);

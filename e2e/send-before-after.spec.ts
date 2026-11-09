@@ -49,7 +49,7 @@ test.describe("on a phone", () => {
     expect(Math.max(file.width, file.height)).toBeLessThanOrEqual(1280);
     expect(shared.text).toContain("Before: a frame from the walkthrough video.");
     expect(shared.text).toContain("After: ");
-    expect(shared.text).toContain("From SiteWork's example plan.");
+    expect(shared.text).toContain("From SightWork's example plan.");
     expect(shared.text.trim().endsWith("sightwork.vercel.app")).toBe(true);
     await expectNoSideScroll(page);
   });

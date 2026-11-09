@@ -18,7 +18,7 @@ import { nextUpShareLine } from "./nextUp";
 export const MAX_SHARE_CHARS = 1600;
 
 /** Last line when no PDF rides along: the teammate has no link to the plan, so say where it came from. */
-export const SHARE_SIGNOFF = "Made with SiteWork · sightwork.vercel.app";
+export const SHARE_SIGNOFF = "Made with SightWork · sightwork.vercel.app";
 export const SHARE_SIGNOFF_PDF = "Full plan with proof photos in the attached PDF.";
 
 const usd = (n: number) => n.toLocaleString("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 });

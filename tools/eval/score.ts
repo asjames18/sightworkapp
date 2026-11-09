@@ -1,5 +1,5 @@
 /**
- * Offline eval for SiteWork plans: score a plan's problems against a labeled answer key.
+ * Offline eval for SightWork plans: score a plan's problems against a labeled answer key.
  * Recall = key items the plan found; precision = plan problems that match some key item.
  * Matching is by keywords in the problem's title and detail (a key item's `any` list), so it is cheap,
  * deterministic and runs in CI with no model calls. It is a regression guard, not a substitute for a human read.

@@ -1,5 +1,5 @@
 /**
- * SiteWork pipeline step: `renderAfter`.
+ * SightWork pipeline step: `renderAfter`.
  *
  * Takes the WorkPlan from the reason step (prompt 03) and produces the
  * "after" image: a Muse Image edit of the hero frame showing only the

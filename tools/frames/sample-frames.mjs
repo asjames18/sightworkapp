@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * SiteWork frame sampler.
+ * SightWork frame sampler.
  *
  * Picks the still frames the pipeline looks at, from one walkthrough video:
  *   1. one frame every --interval seconds (default 2 s)

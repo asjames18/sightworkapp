@@ -1,5 +1,5 @@
 /**
- * The examples on /start. One real SiteWork run (the featured card) and a few hand-written samples on
+ * The examples on /start. One real SightWork run (the featured card) and a few hand-written samples on
  * free stock photos. Every example says which it is: "real" plans came from the pipeline unchanged except
  * for image hosting and a covered logo; "sample" plans are illustrative and never claim a model ran.
  */
@@ -42,7 +42,7 @@ export const EXAMPLES: Example[] = [
     thumb: "/examples/kitchen/f1.webp",
     plan: withFrameSizes(kitchenSample),
     banner:
-      "Sample plan written by hand on 7 stock photos from one kitchen renovation, with a sample narration, to show what a plan looks like. Not a SiteWork run.",
+      "Sample plan written by hand on 7 stock photos from one kitchen renovation, with a sample narration, to show what a plan looks like. Not a SightWork run.",
     credit: { author: "Tomwsulcer", license: "CC0", url: "https://commons.wikimedia.org/wiki/User:Tomwsulcer" },
   },
   {
@@ -53,7 +53,7 @@ export const EXAMPLES: Example[] = [
     thumb: "/examples/thumbs/sanctuary-walk.webp",
     plan: sanctuaryPlan,
     banner:
-      "Real SiteWork run from a 2-minute 28-second narrated walkthrough filmed Nov 2, 2026. Muse Voice Transcribe wrote down the narration, SAM counted the room, Muse Spark Open wrote the plan and checked each problem against its photo, Muse Spark priced it for Sebring, FL, and Muse Image drew the after picture, in about 4 minutes for $1.08 in model calls. Nothing here was edited except covering the church logo.",
+      "Real SightWork run from a 2-minute 28-second narrated walkthrough filmed Nov 2, 2026. Muse Voice Transcribe wrote down the narration, SAM counted the room, Muse Spark Open wrote the plan and checked each problem against its photo, Muse Spark priced it for Sebring, FL, and Muse Image drew the after picture, in about 4 minutes for $1.08 in model calls. Nothing here was edited except covering the church logo.",
   },
   {
     id: "classroom",
@@ -62,7 +62,7 @@ export const EXAMPLES: Example[] = [
     blurb: "Ceiling down, standing water: what to make safe first.",
     thumb: "/examples/thumbs/classroom.webp",
     plan: withFrameSizes(classroomSample),
-    banner: "Sample plan written by hand on one stock photo, to show the format for a classroom. Not a SiteWork run.",
+    banner: "Sample plan written by hand on one stock photo, to show the format for a classroom. Not a SightWork run.",
     credit: { author: "Warren LeMay", license: "CC0", url: "https://commons.wikimedia.org/wiki/File:Classroom,_Log_Cabin_Association_Elementary_School,_Barkers_Creek,_NC_(46649210201).jpg" },
   },
   {
@@ -72,7 +72,7 @@ export const EXAMPLES: Example[] = [
     blurb: "Door closer, floor covers and cleanup in the right order.",
     thumb: "/examples/thumbs/office.webp",
     plan: withFrameSizes(officeSample),
-    banner: "Sample plan written by hand on one stock photo, to show the format for an office. Not a SiteWork run.",
+    banner: "Sample plan written by hand on one stock photo, to show the format for an office. Not a SightWork run.",
     credit: { author: "Sam X (Unsplash)", license: "CC0", url: "https://commons.wikimedia.org/wiki/File:Neglected_office_plants_(Unsplash).jpg" },
   },
   {
@@ -82,7 +82,7 @@ export const EXAMPLES: Example[] = [
     blurb: "Blocked aisles, loose stock and rack checks.",
     thumb: "/examples/thumbs/warehouse.webp",
     plan: withFrameSizes(warehouseSample),
-    banner: "Sample plan written by hand on one stock photo, to show the format for a warehouse. Not a SiteWork run.",
+    banner: "Sample plan written by hand on one stock photo, to show the format for a warehouse. Not a SightWork run.",
     credit: { author: "Charly Birdsinger (Unsplash)", license: "CC0", url: "https://commons.wikimedia.org/wiki/File:Industrial_storage_area_(Unsplash).jpg" },
   },
 ];

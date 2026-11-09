@@ -30,7 +30,7 @@ test("Send the steps left hands over only the work still to do", async ({ page, 
   expect(text).not.toMatch(/^Step 2: /m);
   expect(text).toMatch(/^Step 3: /m);
   expect(text).toContain("Done: steps 1, 2.");
-  expect(text).toContain("Made with SiteWork");
+  expect(text).toContain("Made with SightWork");
 
   for (const width of [375, 768, 1280]) {
     await page.setViewportSize({ width, height: 800 });

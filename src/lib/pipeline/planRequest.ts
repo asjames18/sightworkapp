@@ -1,5 +1,5 @@
 /**
- * SiteWork plan-request validation.
+ * SightWork plan-request validation.
  *
  * Pure checks for the JSON body POSTed to /api/plan, run before any
  * pipeline step so a malformed body fails fast on "uploading" with a

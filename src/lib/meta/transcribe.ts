@@ -1,5 +1,5 @@
 /**
- * SiteWork Muse Voice Transcribe caller (transcribe step).
+ * SightWork Muse Voice Transcribe caller (transcribe step).
  *
  * This is the caller the transcribe step injects (see src/lib/pipeline/transcribe.ts):
  * the step itself records every call on the usage tracker, so the $10

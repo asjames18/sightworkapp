@@ -2,7 +2,7 @@ import type { Issue } from "@/lib/types";
 import { areaFor } from "@/lib/checklist";
 
 /**
- * Ranks of the problems counted under one checklist area, lowest first, each once, so the "What SiteWork
+ * Ranks of the problems counted under one checklist area, lowest first, each once, so the "What SightWork
  * checked" row can link straight to those problem cards. Ranks that are not positive whole numbers are left
  * out, since they have no card to land on.
  */

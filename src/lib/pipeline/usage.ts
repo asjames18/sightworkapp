@@ -1,5 +1,5 @@
 /**
- * SiteWork pipeline usage tracking.
+ * SightWork pipeline usage tracking.
  *
  * Every Meta Model API call the pipeline would make is recorded here:
  * model, pipeline step, latency, cost, and the running total against

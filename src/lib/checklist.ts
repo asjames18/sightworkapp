@@ -1,5 +1,5 @@
 /**
- * The areas SiteWork's problem checklist covers (richer findings, item 1), for the plan's "What we checked"
+ * The areas SightWork's problem checklist covers (richer findings, item 1), for the plan's "What we checked"
  * summary. Each problem is counted under one area, from its checklistKey (new plans), its hazard key (today's
  * plans), or "Other". Pure, no DOM.
  */
@@ -12,7 +12,7 @@ export interface ChecklistArea {
   keys: readonly string[];
   /**
    * Listed only when something landed here. For any future area the plan step's sweep doesn't name for every
-   * space yet, so the summary never says SiteWork checked an area it wasn't asked to check. (Plumbing joined the
+   * space yet, so the summary never says SightWork checked an area it wasn't asked to check. (Plumbing joined the
    * general sweep, so it is listed on every checklist plan.)
    */
   onlyWhenFound?: boolean;

@@ -181,7 +181,7 @@ test.describe("not-found page", () => {
   test("an unknown URL answers 404 with the branded page and both ways back in", async ({ page }) => {
     const res = await page.goto("/no-such-page");
     expect(res?.status()).toBe(404);
-    await expect(page).toHaveTitle("Page not found | SiteWork");
+    await expect(page).toHaveTitle("Page not found | SightWork");
     await expect(page.getByRole("heading", { level: 1, name: "We couldn't find that page." })).toBeVisible();
     await expectNoSideScroll(page);
     await expectNoAxeViolations(page, "404");

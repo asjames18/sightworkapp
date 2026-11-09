@@ -1,5 +1,5 @@
 /**
- * SiteWork Baseten caller (Muse Spark Open, the main plan engine).
+ * SightWork Baseten caller (Muse Spark Open, the main plan engine).
  *
  * Per Antonio's Oct 27 decision, the reason step's main engine is
  * Muse Spark Open on Baseten; Meta SAM 3.1 / Muse Image stay optional

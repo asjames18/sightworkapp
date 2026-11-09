@@ -1,10 +1,10 @@
-# SiteWork App
+# SightWork
 
-Formerly SightWork. Open-source product that started as a Meta AI Developer Hackathon project (Oct 26 – Nov 4, 2026); the [v1.0-hackathon](https://github.com/asjames18/sightwork-hackathon/releases/tag/v1.0-hackathon) tag is the version from that event.
+Open-source product by **Antonio James**. Started as a Meta AI Developer Hackathon project (Oct 26 – Nov 4, 2026); the [v1.0-hackathon](https://github.com/asjames18/sightworkapp/releases/tag/v1.0-hackathon) tag is the version from that event.
 
-[![CI](https://github.com/asjames18/sightwork-hackathon/actions/workflows/ci.yml/badge.svg)](https://github.com/asjames18/sightwork-hackathon/actions/workflows/ci.yml)
+[![CI](https://github.com/asjames18/sightworkapp/actions/workflows/ci.yml/badge.svg)](https://github.com/asjames18/sightworkapp/actions/workflows/ci.yml)
 
-**Built by Antonio James.** Film a short phone walkthrough of a room; SiteWork App returns a work plan you can act on.
+Film a short phone walkthrough of a room; SightWork returns a work plan you can act on.
 
 ## Try it
 **Live app: [sightwork.melanatedintech.com](https://sightwork.melanatedintech.com)**
@@ -13,10 +13,10 @@ Formerly SightWork. Open-source product that started as a Meta AI Developer Hack
 - Running a new walkthrough through the models needs a tester code (this keeps model spend under control). Ask Antonio James if you need one.
 - **Overview video:** [Watch the 2:24 walkthrough on YouTube](https://youtu.be/8ws8nVdm9T8)
 
-![SiteWork App plan screen showing the sanctuary example](docs/screenshot.png)
+![SightWork plan screen showing the sanctuary example](docs/screenshot.png)
 
 ## Meta AI models used
-Every model in SiteWork is a Meta model:
+Every model in SightWork is a Meta model:
 - **Muse Voice Transcribe** turns the narration into timestamped text.
 - **SAM 3.1** outlines and counts what's in the room, frame by frame.
 - **Muse Spark Open** compares what was said with what the frames show, ranks the problems, and writes the materials and the ordered work steps (it also runs the review-only pass that checks each problem against its proof photo).
@@ -29,17 +29,17 @@ The full step-by-step table is in [How it works](#how-it-works).
 You need Node.js 20.9 or newer.
 
 ```bash
-git clone https://github.com/asjames18/sightwork-hackathon.git
-cd sightwork-hackathon
+git clone https://github.com/asjames18/sightworkapp.git
+cd sightworkapp
 npm install
 npm run dev
 ```
 Open http://localhost:3000. Add `?runner=mock` to `/start` to walk the whole flow with example data and no keys. For real runs, copy `.env.example` to `.env.local` and add your own Meta Model API and Baseten keys (see [Real runs](docs/DETAILS.md#real-runs)). Keys are read from the environment only and are never committed.
 
-SiteWork turns a short phone walkthrough of a property into a work plan you can act on. How long to film depends on how big the space is (see [Video length by room size](#video-length-by-room-size)).
+SightWork turns a short phone walkthrough of a property into a work plan you can act on. How long to film depends on how big the space is (see [Video length by room size](#video-length-by-room-size)).
 
 ## What it does
-You film one walkthrough. SiteWork returns:
+You film one walkthrough. SightWork returns:
 - **Counts:** an inventory of what's in the space.
 - **Ranked problems:** what needs attention, worst first and grouped into Fix now, Fix soon and Can wait, including issues the person filming never mentioned.
 - **Worth a closer look:** lower-confidence finds kept in a separate list to check in person, instead of being dropped or padded into the ranked problems.
@@ -50,12 +50,12 @@ You film one walkthrough. SiteWork returns:
 - **After image:** an AI-generated picture of the finished space.
 
 ## How it works
-SiteWork is a multi-step agent where every model is a Meta model. Each step has one job:
+SightWork is a multi-step agent where every model is a Meta model. Each step has one job:
 
 | Step | Meta model | Where it runs | What it does |
 |---|---|---|---|
 | 0. Pick frames | (on the device) | Browser | Sharpest stills: about one per 1.25 s on takes up to 45 s, plus frames where the picture changes fast; about one every 2 s on longer takes; up to 48. Plus the narration as 16 kHz audio. The video never leaves the phone. |
-| 1. Listen | **Muse Voice Transcribe** | Meta Model API | Narration to timestamped text, so SiteWork knows what was said. |
+| 1. Listen | **Muse Voice Transcribe** | Meta Model API | Narration to timestamped text, so SightWork knows what was said. |
 | 2. Look and count | **SAM 3.1** | Meta Model API | Outlines and counts what's in the room, frame by frame. |
 | 3. Compare and plan | **Muse Spark Open** (default) or **Muse Spark** | Meta open weights on Baseten, or Meta Model API | Sweeps the space zone by zone against a categorized checklist (life safety, electrical, AV, lighting, seating, flooring, walls, accessibility and more, plus extra checks for the space type picked), checks what was said against what was seen, ranks the problems (including ones nobody mentioned) with a proof frame each, then writes the materials and the ordered work steps. |
 | 4. Price | **Muse Spark** with web search | Meta Model API | A rough cost range for the city and state: looks up material prices and the local labor rate on the web (searches batched, not one per item), and reports how many prices came from live search. The range itself is computed in code from those prices, so the math is reproducible. |

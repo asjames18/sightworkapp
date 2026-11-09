@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 export const metadata: Metadata = {
-  title: "Page not found | SiteWork",
+  title: "Page not found | SightWork",
 };
 
 /** 404 for any unknown URL: same header as the landing, a plain message and the two ways back in. */
@@ -15,7 +15,7 @@ export default function NotFound() {
             href="/"
             className="-mx-2 flex min-h-11 items-center rounded-lg px-2 text-xl font-extrabold tracking-tight focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
           >
-            Site<span className="text-accent">Work</span>
+            Sight<span className="text-accent">Work</span>
           </Link>
         </div>
       </header>

@@ -1,5 +1,5 @@
 /**
- * SiteWork pipeline runner: one PlanRequest in, one WorkPlan out.
+ * SightWork pipeline runner: one PlanRequest in, one WorkPlan out.
  *
  * Stage order, matched to the UI steps in types.ts:
  *   listening (transcribe) -> looking + counting (segment) ->

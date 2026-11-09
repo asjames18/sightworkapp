@@ -32,7 +32,7 @@ const FIT_STYLE: Record<TakeFitTone, string> = {
 };
 
 /**
- * "Your saved takes": the last few walkthroughs recorded in SiteWork's camera, kept on this device.
+ * "Your saved takes": the last few walkthroughs recorded in SightWork's camera, kept on this device.
  * Each row can be saved to the phone's Photos (share sheet) or downloaded, used for a new plan, or removed.
  * Each row leads with a small still from the take's own video so back-to-back takes are easy to tell apart.
  * A take that already made a plan (still on the recent plans list) says so and can open that plan.

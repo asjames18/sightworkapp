@@ -1,5 +1,5 @@
 /**
- * SiteWork pipeline step: `segment`.
+ * SightWork pipeline step: `segment`.
  *
  * Runs the SAM 3.1 concept list from the prompt 02 spec
  * over the sampled frames and turns the masks

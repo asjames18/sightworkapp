@@ -8,7 +8,7 @@ const m = manifest();
 test("opens straight to the recorder as its own app", () => {
   assert.equal(m.start_url, "/start");
   assert.equal(m.display, "standalone");
-  assert.equal(m.name, "SiteWork App");
+  assert.equal(m.name, "SightWork");
   assert.ok(m.short_name && m.short_name.length <= 12, "short name fits under a home-screen icon");
 });
 

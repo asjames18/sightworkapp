@@ -2,7 +2,7 @@ import { test, expect, expectNoAxeViolations, expectNoSideScroll } from "./helpe
 import type { Page } from "@playwright/test";
 
 /**
- * Takes recorded in SiteWork's camera are kept on this device the moment recording stops, apart from
+ * Takes recorded in SightWork's camera are kept on this device the moment recording stops, apart from
  * the upload, with a Save video button on the take card and a "Your saved takes" list on the start
  * screen. The fake camera records a short take; no request ever reaches /api.
  */

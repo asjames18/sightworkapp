@@ -5,8 +5,8 @@ import { siteStatus, type StatusLevel } from "@/lib/status";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Status | SiteWork",
-  description: "Is SiteWork up, which Meta models are configured, and the safeguards that are always on.",
+  title: "Status | SightWork",
+  description: "Is SightWork up, which Meta models are configured, and the safeguards that are always on.",
 };
 
 const DOT: Record<StatusLevel, string> = { ok: "bg-safe", off: "bg-ink/30", warn: "bg-amber-500" };
@@ -21,7 +21,7 @@ export default function StatusPage() {
       <header className="border-b border-ink/10 pt-[env(safe-area-inset-top)]">
         <div className="mx-auto flex min-h-14 w-full max-w-3xl items-center justify-between gap-3 px-4 sm:px-6">
           <Link href="/" className="-mx-2 flex min-h-11 items-center rounded-lg px-2 text-xl font-extrabold tracking-tight focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">
-            Site<span className="text-accent">Work</span>
+            Sight<span className="text-accent">Work</span>
           </Link>
           <Link href="/start" className="btn-secondary text-sm">
             Open the app

@@ -100,7 +100,7 @@ export function beforeAfterShareTitle(spaceName: string | null | undefined): str
 /** Short caption fitted to the layout: side by side says left/right, stacked says top/bottom. */
 export function beforeAfterCaptionFor(direction: "row" | "column", label: string): string {
   const l = label.trim().replace(/\.$/, "") || "AI concept";
-  return direction === "row" ? `After (right): ${l} · SiteWork` : `After (bottom): ${l} · SiteWork`;
+  return direction === "row" ? `After (right): ${l} · SightWork` : `After (bottom): ${l} · SightWork`;
 }
 
 /** The text that goes with the picture. Example plans say so. */
@@ -112,7 +112,7 @@ export function beforeAfterShareText(spaceName: string | null | undefined, label
     "Before: a frame from the walkthrough video.",
     `After: ${l}. It shows what the space could look like once the work is done.`,
   ];
-  if (opts.sample) lines.push("From SiteWork's example plan.");
+  if (opts.sample) lines.push("From SightWork's example plan.");
   lines.push("", SHARE_SIGNOFF);
   return lines.join("\n");
 }

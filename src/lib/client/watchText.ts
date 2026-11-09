@@ -11,7 +11,7 @@ import { watchCheckedLine } from "@/lib/client/watchChecked";
  *   - Loose wire on the floor by the fireplace (Hearth, 36% sure)
  *     Check whether it is old or live wiring before work goes on around it.
  *
- *   Made with SiteWork · sightwork.vercel.app
+ *   Made with SightWork · sightwork.vercel.app
  */
 export interface WatchTextOptions {
   spaceName?: string;

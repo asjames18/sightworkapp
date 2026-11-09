@@ -1,13 +1,13 @@
 import type { MetadataRoute } from "next";
 
-// Lets a phone add SiteWork App to its home screen with its own name and icon. It opens straight to the
+// Lets a phone add SightWork to its home screen with its own name and icon. It opens straight to the
 // recorder (/start), without browser bars, in the same dark top bar the site uses. A long press on the
 // icon (where the phone supports app shortcuts) jumps straight to a new walkthrough, the last plan saved
 // on this device, or the example plan.
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "SiteWork App",
-    short_name: "SiteWork",
+    name: "SightWork",
+    short_name: "SightWork",
     description: "Film a walkthrough. Get a work plan.",
     id: "/start",
     start_url: "/start",

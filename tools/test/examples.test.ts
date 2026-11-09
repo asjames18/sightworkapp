@@ -70,10 +70,10 @@ for (const e of EXAMPLES) {
     }
 
     if (e.kind === "sample") {
-      assert.match(e.banner, /Not a SiteWork run/, "sample banner says it isn't a run");
+      assert.match(e.banner, /Not a SightWork run/, "sample banner says it isn't a run");
       assert.ok(e.credit && /^CC0/.test(e.credit.license) && /^https:\/\//.test(e.credit.url), "sample is credited CC0");
     } else {
-      assert.match(e.banner, /Real SiteWork run/);
+      assert.match(e.banner, /Real SightWork run/);
       assert.equal(e.credit, undefined);
     }
   });
