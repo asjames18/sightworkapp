@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { PricingPlans } from "@/components/PricingPlans";
+import { PricingAccount } from "@/components/PricingAccount";
 import { billingEnabled } from "@/lib/billing/accessCode";
 
 export const metadata: Metadata = {
@@ -46,6 +47,7 @@ export default function Pricing() {
           an access code for making plans.
         </p>
         <PricingPlans />
+        <PricingAccount />
         <p className="mt-8 text-sm text-ink/75">
           Prefer to pay the model provider yourself?{" "}
           <Link href="/settings" className={link}>
