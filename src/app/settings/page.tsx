@@ -40,6 +40,11 @@ export default function Settings() {
           <p className="mt-2 text-base text-ink/75">
             SightWork is free with your own key. You pay Meta directly for your runs, usually about $0.40 to $1.20 a plan.
           </p>
+          <p className="mt-3 text-base">
+            <Link href="/help/own-key" className={`${link} font-semibold text-accent-dark`} data-testid="own-key-guide-link">
+              New to this? Read the step-by-step guide
+            </Link>
+          </p>
           <ul className="mt-4 list-disc space-y-1 pl-5 text-sm text-ink/75">
             <li>Your key is saved only in this browser on this device.</li>
             <li>It is never sent to SightWork&apos;s servers. Your browser sends it straight to Meta, and only when you make a plan.</li>
