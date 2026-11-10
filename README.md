@@ -12,6 +12,7 @@ Film a short phone walkthrough of a room; SightWork returns a work plan you can 
 - Open the **sanctuary example plan** (a real run on a narrated walkthrough, no code or sign-in needed): [sightwork.melanatedintech.com/start?view=example&ex=sanctuary](https://sightwork.melanatedintech.com/start?view=example&ex=sanctuary).
 - Running a new walkthrough through the models needs a tester code (this keeps model spend under control). Ask Antonio James if you need one.
 - **Use your own Meta API key:** a beginner, step-by-step guide is in [docs/BRING-YOUR-OWN-KEY.md](docs/BRING-YOUR-OWN-KEY.md).
+- **Run your own paid plans (Stripe):** see [docs/PAID-PLANS.md](docs/PAID-PLANS.md).
 - **Overview video:** [Watch the 2:24 walkthrough on YouTube](https://youtu.be/8ws8nVdm9T8)
 
 ![SightWork plan screen showing the sanctuary example](docs/screenshot.png)
