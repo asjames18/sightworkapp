@@ -215,7 +215,7 @@ export function createAsrTranscribeCaller(opts: AsrClientOptions = {}): AsrTrans
       throw new Error("asr: audioWavBase64 must be a non-empty string");
     }
     const b64 = req.audioWavBase64.trim();
-    if (b64.length % 4 !== 0 || !/^[A-Za-z0-9+/]+={0,2}$/.test(b64) || Buffer.from(b64, "base64").length === 0) {
+    if (b64.length % 4 !== 0 || !/^[A-Za-z0-9+/]+={0,2}$/.test(b64) || b64Bytes(b64).length === 0) {
       throw new Error("asr: audioWavBase64 must be valid base64 audio data");
     }
     // Valid base64 is not necessarily WAV: a PNG or other payload
@@ -224,11 +224,11 @@ export function createAsrTranscribeCaller(opts: AsrClientOptions = {}): AsrTrans
     // bytes 0-3, "WAVE" at bytes 8-11) here, before any fetch, like
     // the image callers reject non-image base64 at the same point.
     // A payload too short to hold the header fails.
-    const wavHead = Buffer.from(b64, "base64");
+    const wavHead = b64Bytes(b64);
     if (
       wavHead.length < 12 ||
-      wavHead.toString("ascii", 0, 4) !== "RIFF" ||
-      wavHead.toString("ascii", 8, 12) !== "WAVE"
+      latin1(wavHead, 0, 4) !== "RIFF" ||
+      latin1(wavHead, 8, 12) !== "WAVE"
     ) {
       throw new Error("asr: audioWavBase64 must decode to WAV audio (RIFF/WAVE header)");
     }
@@ -265,7 +265,7 @@ export function createAsrTranscribeCaller(opts: AsrClientOptions = {}): AsrTrans
       throw err;
     }
     const sessionId = `sightwork-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-    const audioBytes = Buffer.from(req.audioWavBase64, "base64");
+    const audioBytes = b64Bytes(req.audioWavBase64.trim());
     const started = Date.now();
     let lastStatus = 0;
     let lastDetail = "";
@@ -372,4 +372,15 @@ export function createAsrTranscribeCaller(opts: AsrClientOptions = {}): AsrTrans
     }
     throw new Error(`asr: ${lastStatus} ${lastDetail}`);
   };
+}
+
+/** Base64 to bytes with atob, so this module also runs in the browser (no Node Buffer). */
+function b64Bytes(b64: string): Uint8Array<ArrayBuffer> {
+  const bin = atob(b64);
+  const out = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
+  return out;
+}
+function latin1(bytes: Uint8Array, start = 0, end = bytes.length): string {
+  return String.fromCharCode(...bytes.subarray(start, end));
 }

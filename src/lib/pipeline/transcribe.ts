@@ -204,20 +204,21 @@ export function validateTranscribeInput(input: TranscribeInput): void {
     if (bytes < 12) {
       throw new Error("transcribe: audio is not a WAV file (missing RIFF/WAVE header)");
     }
-    const head = Buffer.from(input.audioWavBase64, "base64").subarray(0, 12).toString("latin1");
+    const head = latin1(b64Bytes(input.audioWavBase64.replace(/\s/g, "").slice(0, 16)), 0, 12);
     if (head.slice(0, 4) !== "RIFF" || head.slice(8, 12) !== "WAVE") {
       throw new Error("transcribe: audio is not a WAV file (missing RIFF/WAVE header)");
     }
-    const fmtHead = Buffer.from(input.audioWavBase64.replace(/\s/g, "").slice(0, 268), "base64");
+    const fmtHead = b64Bytes(input.audioWavBase64.replace(/\s/g, "").slice(0, 268));
+    const fmtView = new DataView(fmtHead.buffer, fmtHead.byteOffset, fmtHead.byteLength);
     let off = 12;
     while (off + 8 <= fmtHead.length) {
-      const id = fmtHead.subarray(off, off + 4).toString("latin1");
-      const size = fmtHead.readUInt32LE(off + 4);
+      const id = latin1(fmtHead, off, off + 4);
+      const size = fmtView.getUint32(off + 4, true);
       if (id === "fmt " && size >= 16 && off + 8 + 16 <= fmtHead.length) {
-        const format = fmtHead.readUInt16LE(off + 8);
-        const channels = fmtHead.readUInt16LE(off + 10);
-        const sampleRate = fmtHead.readUInt32LE(off + 12);
-        const bits = fmtHead.readUInt16LE(off + 22);
+        const format = fmtView.getUint16(off + 8, true);
+        const channels = fmtView.getUint16(off + 10, true);
+        const sampleRate = fmtView.getUint32(off + 12, true);
+        const bits = fmtView.getUint16(off + 22, true);
         if (
           format !== 1 ||
           channels !== 1 ||
@@ -416,7 +417,7 @@ export async function runTranscribe(
   if (bytes < 12) {
     throw new Error("transcribe: audio is not a WAV file (missing RIFF/WAVE header)");
   }
-  const head = Buffer.from(input.audioWavBase64, "base64").subarray(0, 12).toString("latin1");
+  const head = latin1(b64Bytes(input.audioWavBase64.replace(/\s/g, "").slice(0, 16)), 0, 12);
   if (head.slice(0, 4) !== "RIFF" || head.slice(8, 12) !== "WAVE") {
     throw new Error("transcribe: audio is not a WAV file (missing RIFF/WAVE header)");
   }
@@ -431,16 +432,17 @@ export async function runTranscribe(
   // fmt chunk in the decoded head passes, like the route validator,
   // and is left to the provider.
   {
-    const fmtHead = Buffer.from(input.audioWavBase64.replace(/\s/g, "").slice(0, 268), "base64");
+    const fmtHead = b64Bytes(input.audioWavBase64.replace(/\s/g, "").slice(0, 268));
+    const fmtView = new DataView(fmtHead.buffer, fmtHead.byteOffset, fmtHead.byteLength);
     let off = 12;
     while (off + 8 <= fmtHead.length) {
-      const id = fmtHead.subarray(off, off + 4).toString("latin1");
-      const size = fmtHead.readUInt32LE(off + 4);
+      const id = latin1(fmtHead, off, off + 4);
+      const size = fmtView.getUint32(off + 4, true);
       if (id === "fmt " && size >= 16 && off + 8 + 16 <= fmtHead.length) {
-        const format = fmtHead.readUInt16LE(off + 8);
-        const channels = fmtHead.readUInt16LE(off + 10);
-        const sampleRate = fmtHead.readUInt32LE(off + 12);
-        const bits = fmtHead.readUInt16LE(off + 22);
+        const format = fmtView.getUint16(off + 8, true);
+        const channels = fmtView.getUint16(off + 10, true);
+        const sampleRate = fmtView.getUint32(off + 12, true);
+        const bits = fmtView.getUint16(off + 22, true);
         if (
           format !== 1 ||
           channels !== 1 ||
@@ -519,4 +521,15 @@ export async function runTranscribe(
   }
 
   return { transcript: buildTranscript(turns), transcriptTurns: turns };
+}
+
+/** Base64 to bytes with atob, so this module also runs in the browser (no Node Buffer). */
+function b64Bytes(b64: string): Uint8Array<ArrayBuffer> {
+  const bin = atob(b64);
+  const out = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
+  return out;
+}
+function latin1(bytes: Uint8Array, start = 0, end = bytes.length): string {
+  return String.fromCharCode(...bytes.subarray(start, end));
 }

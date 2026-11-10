@@ -41,18 +41,12 @@ describe("own-key runner", () => {
   test("a finished run ends on the plan with the region; region and key-free request reach the pipeline", async () => {
     let got: PlanRequest | null = null;
     let gotDeps: unknown = null;
-    const seen = await runWith({ canTranscribe: () => true, run: async (r, d) => { got = r; gotDeps = d; return plan; } });
+    const seen = await runWith({ run: async (r, d) => { got = r; gotDeps = d; return plan; } });
     assert.equal(seen.at(-1)?.state, "done");
     assert.equal((got as unknown as PlanRequest).region, "Sebring, FL");
     assert.equal((got as unknown as PlanRequest).audioWavBase64, "UklGRg==");
     assert.ok(!JSON.stringify(got).includes(KEY));
     assert.equal((gotDeps as { planProvider: string }).planProvider, "meta");
-  });
-
-  test("without browser transcription, the narration is left out instead of failing the run", async () => {
-    let got: PlanRequest | null = null;
-    await runWith({ canTranscribe: () => false, run: async (r) => { got = r; return plan; } });
-    assert.equal((got as unknown as PlanRequest).audioWavBase64, undefined);
   });
 
   test("a step error shows its own message; anything else gets a generic line, never the raw error", async () => {

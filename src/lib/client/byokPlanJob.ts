@@ -65,15 +65,6 @@ export function ownKeyDeps(apiKey: string, fetchImpl?: typeof fetch): Omit<RunPl
   };
 }
 
-/**
- * The transcribe step still decodes audio with Node's Buffer, which browsers don't have. Until that changes,
- * own-key runs leave the narration out (the plan is made from the frames, like a silent take) instead of
- * failing on the listening step.
- */
-export function browserCanTranscribe(): boolean {
-  return typeof (globalThis as { Buffer?: unknown }).Buffer !== "undefined";
-}
-
 function isAbort(err: unknown): boolean {
   return typeof err === "object" && err !== null && (err as { name?: unknown }).name === "AbortError";
 }
@@ -88,7 +79,6 @@ export interface ByokPlanJobOptions {
   getKey?: () => string;
   getRegion?: () => string;
   fetchImpl?: typeof fetch;
-  canTranscribe?: () => boolean;
   /** The pipeline; tests pass a stand-in so nothing is called. */
   run?: (request: PlanRequest, deps: RunPlanDeps) => Promise<WorkPlan>;
 }
@@ -96,7 +86,6 @@ export interface ByokPlanJobOptions {
 export function createByokPlanJob(o: ByokPlanJobOptions): PlanJobRunner {
   const getKey = o.getKey ?? (() => loadKey());
   const getRegion = o.getRegion ?? (() => loadRegion());
-  const canTranscribe = o.canTranscribe ?? browserCanTranscribe;
   const run = o.run ?? runPlan;
   return async ({ file, onStatus, signal }) => {
     const report = (s: PlanJobStatus) => {
@@ -120,11 +109,6 @@ export function createByokPlanJob(o: ByokPlanJobOptions): PlanJobRunner {
     }
     if (signal.aborted) return;
     if (!request.region?.trim()) request = { ...request, region };
-    if (request.audioWavBase64 && !canTranscribe()) {
-      const { audioWavBase64: _audio, ...rest } = request;
-      void _audio;
-      request = rest;
-    }
     report({ state: "running", step: "uploading", check: uploadCheck(request.frames.length) });
 
     const deps = ownKeyDeps(key, o.fetchImpl);
