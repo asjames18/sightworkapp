@@ -113,7 +113,7 @@ export function createByokPlanJob(o: ByokPlanJobOptions): PlanJobRunner {
 
     const deps = ownKeyDeps(key, o.fetchImpl);
     try {
-      const plan = await run(request, { ...deps, onStatus: report, signal, startedAtMs: Date.now() });
+      const plan = await run(request, { ...deps, onStatus: report, signal, startedAtMs: Date.now(), picturingLimitMs: Infinity });
       report({ state: "done", plan: withRunRegion(plan, request.region) });
     } catch (err) {
       if (isAbort(err) || signal.aborted) return;

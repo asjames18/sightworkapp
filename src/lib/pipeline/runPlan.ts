@@ -179,6 +179,8 @@ export interface RunPlanDeps {
    * own start is used. Drives the picturing time-limit skip below.
    */
   startedAtMs?: number;
+  /** Skip the picture and review once the run is this old. Default PICTURING_TIME_LIMIT_MS (the host's function limit); a run in the user's own browser has no such limit and passes Infinity. */
+  picturingLimitMs?: number;
 }
 
 function assertNotAborted(signal: AbortSignal | undefined): void {
@@ -2076,7 +2078,7 @@ export async function runPlan(request: PlanRequest, deps: RunPlanDeps): Promise<
   // and a ran:false review below, instead of no plan at all. A
   // time-skipped picturing arrives only via the done plan's
   // meta.skipped, like every other picturing skip (see above).
-  const picturingTimeSkipped = picturingTimeLimitExceeded(runStartedAtMs);
+  const picturingTimeSkipped = (deps.picturingLimitMs ?? PICTURING_TIME_LIMIT_MS) !== Infinity && picturingTimeLimitExceeded(runStartedAtMs);
   if (picturingTimeSkipped) {
     console.log(
       `runPlan: picturing skipped: time-limit (elapsed ${Date.now() - runStartedAtMs} ms)`,

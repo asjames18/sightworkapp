@@ -1,4 +1,5 @@
 import { findResponseJson } from "../responseJson";
+import { toStrictSchema } from "./strictSchema";
 
 /**
  * SightWork Meta client (Muse Spark via the Meta Model API).
@@ -304,7 +305,7 @@ export function createMetaClient(opts: MetaClientOptions = {}): MetaClient {
       const body: Record<string, unknown> = {
         model: req.model,
         input: [{ role: "user", content }],
-        text: { format: { type: "json_schema", name: "sightwork", schema: req.schema, strict: true } },
+        text: { format: { type: "json_schema", name: "sightwork", schema: toStrictSchema(req.schema), strict: true } },
         ...(req.tools && req.tools.length > 0 ? { tools: req.tools } : {}),
         ...(req.temperature !== undefined ? { temperature: req.temperature } : {}),
       };
