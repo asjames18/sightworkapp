@@ -62,6 +62,8 @@ export default defineConfig({
           META_API_KEY: "",
           MODEL_API_KEY: "",
           BASETEN_API_KEY: "",
+          SIGHTWORK_BILLING: "on",
+          STRIPE_SECRET_KEY: "",
         },
       },
 });
