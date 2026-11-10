@@ -23,8 +23,10 @@ const quiet = async <T>(fn: () => Promise<T>): Promise<T> => {
   }
 };
 const stripe = (subStatus: number, sub: unknown, portal: unknown, seen: string[] = []) =>
-  async (url: string, init: { method: string; body: string }) => {
-    seen.push(`${init.method} ${url} ${init.body}`);
+  async (url: string, init: { method: string; body?: string }) => {
+    // Fetch refuses a GET that has a body, so a GET must not carry one.
+    if (init.method === "GET" && init.body !== undefined) throw new TypeError("Request with GET/HEAD method cannot have body.");
+    seen.push(`${init.method} ${url} ${init.body ?? ""}`);
     if (url.includes("/subscriptions/")) return { ok: subStatus < 300, status: subStatus, json: async () => sub };
     return { ok: true, status: 200, json: async () => portal };
   };

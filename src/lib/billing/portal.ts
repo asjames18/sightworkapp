@@ -10,7 +10,7 @@ export interface PortalReply {
 
 type StripeFetch = (
   url: string,
-  init: { method: string; headers: Record<string, string>; body: string },
+  init: { method: string; headers: Record<string, string>; body?: string },
 ) => ReturnType<FetchLike>;
 
 const PORTAL_STATUSES = new Set(["active", "trialing", "past_due"]);
@@ -44,7 +44,7 @@ export async function handleBillingPortal(
   try {
     const f = ctx.fetchImpl ?? (fetch as unknown as StripeFetch);
     const auth = { Authorization: `Bearer ${key}` };
-    const subRes = await f(`${STRIPE_API}/subscriptions/${v.grant.stripeId}`, { method: "GET", headers: auth, body: "" });
+    const subRes = await f(`${STRIPE_API}/subscriptions/${v.grant.stripeId}`, { method: "GET", headers: auth });
     if (subRes.status === 404) return { status: 404, body: { error: "We couldn't find that subscription." } };
     if (!subRes.ok) throw new Error(`Stripe answered ${subRes.status}`);
     const sub = (await subRes.json()) as { customer?: unknown; status?: unknown };
