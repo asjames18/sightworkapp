@@ -10,7 +10,7 @@ Film a short phone walkthrough of a room; SightWork returns a work plan you can 
 **Live app: [sightwork.melanatedintech.com](https://sightwork.melanatedintech.com)**
 
 - Open the **sanctuary example plan** (a real run on a narrated walkthrough, no code or sign-in needed): [sightwork.melanatedintech.com/start?view=example&ex=sanctuary](https://sightwork.melanatedintech.com/start?view=example&ex=sanctuary).
-- Running a new walkthrough through the models needs a tester code (this keeps model spend under control). Ask Antonio James if you need one.
+- To run a new walkthrough through the models, buy a plan on the [pricing page](https://sightwork.melanatedintech.com/pricing) (single plan, 5-plan pack or a subscription), or use your own Meta API key for free (below).
 - **Use your own Meta API key:** a beginner, step-by-step guide is in [docs/BRING-YOUR-OWN-KEY.md](docs/BRING-YOUR-OWN-KEY.md).
 - **Run your own paid plans (Stripe):** see [docs/PAID-PLANS.md](docs/PAID-PLANS.md).
 - **Overview video:** [Watch the 2:24 walkthrough on YouTube](https://youtu.be/8ws8nVdm9T8)
@@ -66,7 +66,7 @@ SightWork is a multi-step agent where every model is a Meta model. Each step has
 
 ```mermaid
 flowchart LR
-  V[Phone walkthrough] -->|frames + 16 kHz audio, on device| G{Tester-code gate}
+  V[Phone walkthrough] -->|frames + 16 kHz audio, on device| G{Paid access-code gate}
   G --> T[Muse Voice Transcribe]
   G --> S[SAM 3.1 outlines + counts]
   T --> P[Muse Spark Open on Baseten: compare + plan]
