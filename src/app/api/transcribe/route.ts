@@ -185,6 +185,12 @@ export async function POST(req: Request): Promise<Response> {
   try {
     validateTranscribeInput(parsed as { audioWavBase64?: string; spaceType?: string });
   } catch (err) {
+    // Same JSON-event trace as the plan route's invalid request
+    // (2026-11-13): validation was the last refusal path whose only
+    // trace was a plain-text console.error instead of a countable
+    // event. Route only, never the request content. The
+    // console.error detail stays for diagnosis.
+    console.log(JSON.stringify({ event: "sightwork_invalid_request", route: "transcribe" }));
     console.error(`transcribe route: invalid request: ${err instanceof Error ? err.message : String(err)}`);
     return errorResponse("That transcribe request was incomplete. Try again.", 400);
   }
