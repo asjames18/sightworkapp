@@ -221,6 +221,12 @@ export async function POST(req: Request): Promise<Response> {
   try {
     bodyText = await req.text();
   } catch {
+    // An unreadable body leaves a server-log trace, like the
+    // entitlement denials, the rate-limit refusals and the
+    // body-too-large refusals (2026-11-13): without it a client
+    // posting garbage is refused with no trace at all. Same
+    // JSON-event shape; route only, never the body.
+    console.log(JSON.stringify({ event: "sightwork_unreadable_body", route: "plan" }));
     // JSON {error} (not plain text) so the client can surface this
     // message on a non-OK response instead of only its generic one.
     return new Response(JSON.stringify({ error: "could not read request body" }), {
@@ -256,6 +262,9 @@ export async function POST(req: Request): Promise<Response> {
   try {
     parsed = JSON.parse(bodyText);
   } catch {
+    // Same unreadable-body trace as the read failure above: a body
+    // that is not JSON is refused with a failed line and no trace.
+    console.log(JSON.stringify({ event: "sightwork_unreadable_body", route: "plan" }));
     return failedLine("uploading", "We couldn't read that plan request. Try again.");
   }
 
