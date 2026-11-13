@@ -76,6 +76,7 @@ async function run(
   json: Record<string, unknown>;
   stripeCalls: number;
   stripePosts: number;
+  logs: string[];
 }> {
   const saved = Object.fromEntries(ENV_VARS.map((k) => [k, process.env[k]]));
   for (const k of KEY_VARS) delete process.env[k];
@@ -83,8 +84,10 @@ async function run(
   for (const [k, v] of Object.entries(opts.env ?? {})) process.env[k] = v;
   const realFetch = globalThis.fetch;
   const realError = console.error;
+  const realLog = console.log;
   let stripeCalls = 0;
   let stripePosts = 0;
+  const logs: string[] = [];
   const stub = opts.fetchImpl ?? never;
   globalThis.fetch = (async (input: string | URL | Request, init?: RequestInit) => {
     const url = typeof input === "string" ? input : input instanceof URL ? input.href : input.url;
@@ -106,16 +109,20 @@ async function run(
     throw new Error(`unexpected fetch: ${url}`);
   }) as typeof fetch;
   console.error = () => {};
+  console.log = (...args: unknown[]) => {
+    logs.push(args.map((a) => String(a)).join(" "));
+  };
   try {
     const headers: Record<string, string> = {};
     if (opts.code !== undefined) headers["x-sightwork-access-code"] = opts.code;
     const res = await POST(
       new Request("http://localhost/api/transcribe", { method: "POST", headers, body: payload }),
     );
-    return { status: res.status, json: (await res.json()) as Record<string, unknown>, stripeCalls, stripePosts };
+    return { status: res.status, json: (await res.json()) as Record<string, unknown>, stripeCalls, stripePosts, logs };
   } finally {
     globalThis.fetch = realFetch;
     console.error = realError;
+    console.log = realLog;
     for (const k of ENV_VARS) {
       if (saved[k] === undefined) delete process.env[k];
       else process.env[k] = saved[k];
@@ -143,28 +150,44 @@ function packStripe(used = "2"): StripeStub {
   };
 }
 
+/** Reasons from the sightwork_entitlement_denied log lines, in order. */
+function denials(logs: string[]): string[] {
+  return logs
+    .map((l) => {
+      try {
+        return JSON.parse(l) as { event?: string; reason?: string };
+      } catch {
+        return null;
+      }
+    })
+    .filter((o): o is { event: string; reason: string } => o?.event === "sightwork_entitlement_denied")
+    .map((o) => o.reason);
+}
+
 test("billing off: any access-code header falls through, Stripe never called", async () => {
-  const { status, json, stripeCalls } = await run(emptyBody, {
+  const { status, json, stripeCalls, logs } = await run(emptyBody, {
     env: { SIGHTWORK_BILLING: "" },
     code: "sw1.garbage",
   });
   assert.equal(stripeCalls, 0);
+  assert.deepEqual(denials(logs), []);
   assert.equal(status, 200);
   assert.deepEqual(json, { transcript: null, transcriptTurns: [], costUsd: 0 });
 });
 
 test("billing on: an invalid code is 402 and never reaches Stripe", async () => {
-  const { status, json, stripeCalls } = await run(emptyBody, {
+  const { status, json, stripeCalls, logs } = await run(emptyBody, {
     env: BILLING_ENV,
     code: "sw1.a.b",
   });
   assert.equal(stripeCalls, 0);
   assert.equal(status, 402);
   assert.deepEqual(json, { error: "That access code isn't active." });
+  assert.deepEqual(denials(logs), ["invalid"]);
 });
 
 test("billing on: a canceled subscription is 402 after one Stripe check", async () => {
-  const { status, json, stripeCalls } = await run(emptyBody, {
+  const { status, json, stripeCalls, logs } = await run(emptyBody, {
     env: BILLING_ENV,
     code: sub,
     fetchImpl: stripe(200, { status: "canceled" }),
@@ -172,10 +195,11 @@ test("billing on: a canceled subscription is 402 after one Stripe check", async 
   assert.equal(stripeCalls, 1);
   assert.equal(status, 402);
   assert.deepEqual(json, { error: "That access code isn't active." });
+  assert.deepEqual(denials(logs), ["inactive"]);
 });
 
 test("billing on: a Stripe error is 503, not 402", async () => {
-  const { status, json, stripeCalls } = await run(emptyBody, {
+  const { status, json, stripeCalls, logs } = await run(emptyBody, {
     env: BILLING_ENV,
     code: sub,
     fetchImpl: stripe(500, {}),
@@ -183,6 +207,7 @@ test("billing on: a Stripe error is 503, not 402", async () => {
   assert.equal(stripeCalls, 1);
   assert.equal(status, 503);
   assert.deepEqual(json, { error: "We can't check your plan right now. Try again shortly." });
+  assert.deepEqual(denials(logs), ["unavailable"]);
 });
 
 test("billing on: an active subscription proceeds to the empty transcript", async () => {
@@ -221,7 +246,7 @@ test("billing on: a pack code transcribes and records nothing here", async () =>
 });
 
 test("billing on: a used-up pack is 402 with reason used-up", async () => {
-  const { status, json, stripeCalls, stripePosts } = await run(emptyBody, {
+  const { status, json, stripeCalls, stripePosts, logs } = await run(emptyBody, {
     env: BILLING_ENV,
     code: pack,
     fetchImpl: packStripe("5"),
@@ -231,4 +256,5 @@ test("billing on: a used-up pack is 402 with reason used-up", async () => {
   assert.equal(stripePosts, 0);
   assert.equal(status, 402);
   assert.deepEqual(json, { error: "That access code isn't active.", reason: "used-up" });
+  assert.deepEqual(denials(logs), ["used-up"]);
 });
