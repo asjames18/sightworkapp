@@ -49,7 +49,7 @@
  * so there is no reason it must sit after body validation — and
  * sitting first keeps invalid-code probes out of the rate limiter.
  * After the done line, a finished plan on a pack code is recorded
- * with recordPackUse (best-effort, logged on failure); a sub code
+ * with recordPackUse (best-effort, logged on success and failure); a sub code
  * records nothing, and billing off records nothing.
  */
 
@@ -342,10 +342,18 @@ export async function POST(req: Request): Promise<Response> {
         // Pack tally (2026-11-13): a finished plan counts against its
         // pack. Best-effort: the plan is already built, so a
         // bookkeeping failure is logged server-side and never fails
-        // the run.
+        // the run. A success is logged too, with the new count, so
+        // pack usage is auditable from the server log without a
+        // separate Stripe read.
         if (entitlement?.allowed && entitlement.kind === "pack") {
           const r = await recordPackUse(entitlement.stripeId);
-          if (!r.ok) console.log(JSON.stringify({ event: "sightwork_pack_use_failed", reason: r.reason }));
+          console.log(
+            JSON.stringify(
+              r.ok
+                ? { event: "sightwork_pack_use", customer: entitlement.stripeId, used: r.used }
+                : { event: "sightwork_pack_use_failed", reason: r.reason },
+            ),
+          );
         }
         console.log(
           `plan route: done, provider ${plan.meta?.planProvider ?? "unset"}, ` +
