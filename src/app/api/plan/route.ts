@@ -232,6 +232,17 @@ export async function POST(req: Request): Promise<Response> {
   // Agreed cap: the browser builder stays under 9 MB; over 10 MB the
   // client shows its own too-large message from the 413.
   if (planBodyTooLarge(bodyText)) {
+    // A refused request leaves a server-log trace, like the
+    // entitlement denials and the rate-limit refusals (2026-11-13):
+    // an oversize body is otherwise invisible except in the client.
+    // Same JSON-event shape; bytes only, never the body.
+    console.log(
+      JSON.stringify({
+        event: "sightwork_body_too_large",
+        route: "plan",
+        bytes: new TextEncoder().encode(bodyText).length,
+      }),
+    );
     // JSON {error} (not plain text) so the client can surface this
     // message on a non-OK response; the client still keys its
     // too-large message off the 413 status, so this changes no UI yet.
