@@ -20,11 +20,11 @@ test("off, bad, or wrong-mode codes never reach Stripe", async () => {
 });
 
 test("subscriptions need an active or trialing status; packs need a live customer", async () => {
-  assert.deepEqual(await checkEntitlement(sub, { env: ENV, fetchImpl: stripe(200, { status: "active" }) }), { allowed: true, kind: "sub" });
-  assert.deepEqual(await checkEntitlement(sub, { env: ENV, fetchImpl: stripe(200, { status: "trialing" }) }), { allowed: true, kind: "sub" });
+  assert.deepEqual(await checkEntitlement(sub, { env: ENV, fetchImpl: stripe(200, { status: "active" }) }), { allowed: true, kind: "sub", stripeId: "sub_Abc123456" });
+  assert.deepEqual(await checkEntitlement(sub, { env: ENV, fetchImpl: stripe(200, { status: "trialing" }) }), { allowed: true, kind: "sub", stripeId: "sub_Abc123456" });
   assert.deepEqual(await checkEntitlement(sub, { env: ENV, fetchImpl: stripe(200, { status: "canceled" }) }), { allowed: false, reason: "inactive" });
   assert.deepEqual(await checkEntitlement(sub, { env: ENV, fetchImpl: stripe(404, {}) }), { allowed: false, reason: "inactive" });
   assert.deepEqual(await checkEntitlement(sub, { env: ENV, fetchImpl: stripe(500, {}) }), { allowed: false, reason: "unavailable" });
-  assert.deepEqual(await checkEntitlement(pack, { env: ENV, fetchImpl: stripe(200, { id: "cus_Abc123456" }) }), { allowed: true, kind: "pack" });
+  assert.deepEqual(await checkEntitlement(pack, { env: ENV, fetchImpl: stripe(200, { id: "cus_Abc123456" }) }), { allowed: true, kind: "pack", stripeId: "cus_Abc123456" });
   assert.deepEqual(await checkEntitlement(pack, { env: ENV, fetchImpl: stripe(200, { deleted: true }) }), { allowed: false, reason: "inactive" });
 });

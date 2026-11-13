@@ -1,6 +1,7 @@
 // Is this access code still worth a run? Server only. The code's signature says which Stripe
 // subscription it belongs to; Stripe says whether that subscription is paid up right now.
-// Plan packs are not counted here yet: a pack code only proves a paid customer.
+// Plan packs are not counted here yet: a pack code only proves a paid customer. The Stripe id
+// comes back with an allowed result so the caller can record a finished pack plan (packUse.ts).
 import { accessSecret, billingEnabled, verifyAccessCode } from "./accessCode";
 import { STRIPE_API } from "./checkout";
 
@@ -11,7 +12,7 @@ type GetLike = (url: string, init: { method: string; headers: Record<string, str
 }>;
 
 export type Entitlement =
-  | { allowed: true; kind: "pack" | "sub" }
+  | { allowed: true; kind: "pack" | "sub"; stripeId: string }
   | { allowed: false; reason: "off" | "invalid" | "inactive" | "unavailable" };
 
 export async function checkEntitlement(
@@ -33,9 +34,9 @@ export async function checkEntitlement(
     if (!res.ok) return { allowed: false, reason: "unavailable" };
     const j = (await res.json()) as { status?: unknown; deleted?: unknown };
     if (v.grant.kind === "sub") {
-      return j.status === "active" || j.status === "trialing" ? { allowed: true, kind: "sub" } : { allowed: false, reason: "inactive" };
+      return j.status === "active" || j.status === "trialing" ? { allowed: true, kind: "sub", stripeId: v.grant.stripeId } : { allowed: false, reason: "inactive" };
     }
-    return j.deleted === true ? { allowed: false, reason: "inactive" } : { allowed: true, kind: "pack" };
+    return j.deleted === true ? { allowed: false, reason: "inactive" } : { allowed: true, kind: "pack", stripeId: v.grant.stripeId };
   } catch {
     return { allowed: false, reason: "unavailable" };
   }
