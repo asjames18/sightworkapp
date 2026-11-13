@@ -152,6 +152,17 @@ export async function POST(req: Request): Promise<Response> {
   // cannot be a valid request (the step caps audio at 32 MB decoded),
   // so the 413 changes no valid request, it just fails fast.
   if (transcribeBodyTooLarge(bodyText)) {
+    // A refused request leaves a server-log trace, like the
+    // entitlement denials and the rate-limit refusals (2026-11-13):
+    // an oversize body is otherwise invisible except in the client.
+    // Same JSON-event shape; bytes only, never the body.
+    console.log(
+      JSON.stringify({
+        event: "sightwork_body_too_large",
+        route: "transcribe",
+        bytes: new TextEncoder().encode(bodyText).length,
+      }),
+    );
     return errorResponse("transcribe request body too large", 413);
   }
 
