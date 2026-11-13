@@ -198,6 +198,9 @@ export async function POST(req: Request): Promise<Response> {
             entitlement.reason === "unavailable"
               ? "We can't check your plan right now. Try again shortly."
               : "That access code isn't active.",
+          // The client maps reason "used-up" to the pack-used-up text on
+          // screen (2026-11-13); any other 402 keeps the inactive-code text.
+          ...(entitlement.reason === "used-up" ? { reason: "used-up" } : {}),
         }),
         {
           status: entitlement.reason === "unavailable" ? 503 : 402,
