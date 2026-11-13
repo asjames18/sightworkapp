@@ -44,8 +44,14 @@
  * (32 MB decoded, src/lib/pipeline/transcribe.ts) once base64-encoded,
  * plus JSON framing, so it rejects only bodies the step would reject
  * anyway — no valid request changes.
+ *
+ * Access-code entitlement (2026-11-13): the same gate as POST
+ * /api/plan, at the top of POST before the body is read, so a paid
+ * run's split transcribe call is not stuck behind the tester-code
+ * gate on long narration. No pack tally here.
  */
 
+import { checkEntitlement } from "../../../lib/billing/entitlement";
 import { createAsrTranscribeCaller } from "../../../lib/meta/transcribe";
 import {
   runTranscribe,
@@ -105,6 +111,25 @@ function errorResponse(message: string, status: number): Response {
 }
 
 export async function POST(req: Request): Promise<Response> {
+  // Access-code entitlement (2026-11-13): the same gate as POST
+  // /api/plan, at the top, so a paid run's split transcribe call is
+  // not stuck behind the tester-code gate on long narration. No pack
+  // tally here — the plan run records the use. When billing is off
+  // the check is a no-op and the request proceeds exactly as before.
+  // Note: the gate runs before the empty-audio return too, so a dead
+  // code fails fast even on a no-narration request.
+  const accessCode = req.headers.get("x-sightwork-access-code");
+  if (accessCode) {
+    const entitlement = await checkEntitlement(accessCode);
+    if (!entitlement.allowed && entitlement.reason !== "off") {
+      return errorResponse(
+        entitlement.reason === "unavailable"
+          ? "We can't check your plan right now. Try again shortly."
+          : "That access code isn't active.",
+        entitlement.reason === "unavailable" ? 503 : 402,
+      );
+    }
+  }
   let bodyText: string;
   try {
     bodyText = await req.text();
