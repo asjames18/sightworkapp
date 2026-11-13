@@ -5,6 +5,7 @@ import type { PlanJobRunner } from "./planJob";
 import { BuildRequestError } from "./buildPlanRequest";
 import { NARRATION_CHUNK_MAX_SEC, splitNarrationWav, stitchChunkTranscripts, type ChunkTranscript } from "./narrationChunks";
 import { loadTestCode, TEST_CODE_HEADER } from "./testCode";
+import { ACCESS_CODE_HEADER, loadAccessCode } from "./accessCode";
 import { loadRegion } from "./location";
 import { withRunRegion } from "./planText";
 
@@ -110,8 +111,13 @@ export function isResumeFailure(message: string): boolean {
   return isTesterCodeFailure(message) || message === LOCATION_REQUIRED_MESSAGE;
 }
 
+/** A paid access code the server refused (used up, canceled or changed). Not a tester-code failure. */
+export const ACCESS_CODE_MESSAGE =
+  "Your access code isn't active. Check your plan on the pricing page, or open the example plan.";
+
 export function messageForStatus(status: number): string {
   if (status === 401) return TESTER_CODE_MESSAGE;
+  if (status === 402) return ACCESS_CODE_MESSAGE;
   if (status === 413) return "That video is too large to send. Try a shorter walkthrough.";
   if (status === 400) return "The video's frames didn't come through right. Try again, or open the example plan.";
   if (status === 429) return "Too many plans are running right now. Wait a minute and try again.";
@@ -330,7 +336,10 @@ export function createApiPlanJob(
 
     // The server answers 401 to any run without a tester code (src/proxy.ts), so don't spend the time
     // reading frames and audio and uploading megabytes just to hear that.
-    if (!loadTestCode()) {
+    // A paid access code (saved after a purchase) also opens a real run; the plan route checks it.
+    const testCode = loadTestCode();
+    const accessCode = loadAccessCode();
+    if (!testCode && !accessCode) {
       fail(messageForStatus(401));
       return;
     }
@@ -355,9 +364,11 @@ export function createApiPlanJob(
     if (signal.aborted) return;
 
     // The split /api/transcribe request's cost (transcribeUsd above) is added to the plan's total when it comes back.
-    if (transcribeEndpoint) {
+    // The split transcribe request needs the tester code; with only an access code the narration rides in
+    // the plan request instead (the size check below still applies).
+    if (transcribeEndpoint && testCode) {
       // The processing screen moves to "Listening" while the narration is read, with "part 2 of 4" on long takes.
-      const split = await splitNarration(body, transcribeEndpoint, loadTestCode(), signal, narrationChunkSec, (part) =>
+      const split = await splitNarration(body, transcribeEndpoint, testCode, signal, narrationChunkSec, (part) =>
         report(part ? { state: "running", step: "listening", part } : { state: "running", step: "listening" }),
       );
       if (signal.aborted) return;
@@ -379,7 +390,12 @@ export function createApiPlanJob(
     try {
       res = await fetch(endpoint, {
         method: "POST",
-        headers: { "Content-Type": "application/json", Accept: "application/x-ndjson", [TEST_CODE_HEADER]: loadTestCode() },
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/x-ndjson",
+          ...(testCode ? { [TEST_CODE_HEADER]: testCode } : {}),
+          ...(accessCode ? { [ACCESS_CODE_HEADER]: accessCode } : {}),
+        },
         body: JSON.stringify(body),
         signal,
       });
@@ -389,8 +405,9 @@ export function createApiPlanJob(
     }
     if (!res.ok || !res.body) {
       if (!res.ok) await logServerError(res);
-      // A code was sent (checked above), so a 401 here means the server refused it.
-      fail(res.ok ? GENERIC_FAIL : res.status === 401 ? WRONG_CODE_MESSAGE : messageForStatus(res.status));
+      // A tester code was sent, so a 401 means the server refused it; with only an access code, a 401 means
+      // the server isn't taking paid runs, and the tester-code prompt is the way in.
+      fail(res.ok ? GENERIC_FAIL : res.status === 401 && testCode ? WRONG_CODE_MESSAGE : messageForStatus(res.status));
       return;
     }
 

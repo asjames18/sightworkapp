@@ -17,6 +17,8 @@ test("the return page shows the access code and reads cleanly at every width", a
     await page.goto("/billing/done?session_id=cs_test_e2eABC123");
     await expect(page.getByTestId("access-code")).toHaveText(CODE);
     await expect(page.getByText("5-Plan Pack is ready")).toBeVisible();
+    await expect(page.getByTestId("code-kept")).toBeVisible();
+    expect(await page.evaluate(() => localStorage.getItem("sightwork:access-code"))).toBe(CODE);
     await expectNoSideScroll(page);
     await expectNoAxeViolations(page, `billing done ${width}`);
   }

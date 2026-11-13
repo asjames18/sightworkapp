@@ -5,6 +5,7 @@ import { currentOwnVideoRunnerKind, needsTesterCode, pickRunnerKind, type Runner
 import { hasLastPlan } from "@/lib/client/lastPlan";
 import { EXAMPLES, type Example } from "@/lib/examples";
 import { loadTestCode, saveTestCode } from "@/lib/client/testCode";
+import { loadAccessCode, looksLikeAccessCode, saveAccessCode } from "@/lib/client/accessCode";
 import { checkLocation, CITY_MAX, isUsStateCode, isValidCity, loadLocation, saveLocation, US_STATES, type RunLocation } from "@/lib/client/location";
 import { aimRange, aimRangeSpoken, checkDuration, DEFAULT_ROOM_SIZE, durationRulesFor, formatDuration, shortLength, type Check, type RoomSize } from "@/lib/client/duration";
 import { loadRoomSize, saveRoomSize } from "@/lib/client/roomSize";
@@ -126,7 +127,7 @@ export function UploadStep({
   };
   const send = (file: File) => {
     if (videoRunner === "api" && !locationReady()) return;
-    if (needsTesterCode(videoRunner, loadTestCode())) setAskCode(true);
+    if (needsTesterCode(videoRunner, loadTestCode() || loadAccessCode())) setAskCode(true);
     else onVideo(file, videoRunner);
   };
   useEffect(() => () => { if (preview) URL.revokeObjectURL(preview.url); }, [preview]);
@@ -155,7 +156,7 @@ export function UploadStep({
     if (where.ok) setAskCode(true);
     else {
       setLocError(where.message);
-      setAskCode(!loadTestCode());
+      setAskCode(!(loadTestCode() || loadAccessCode()));
     }
   }, [resumeFile, pick]);
   // Back from a run stopped on the processing screen: the same video, ready to change details and start again.
@@ -720,7 +721,9 @@ function TesterCode({
       className={onSaved ? "mt-3" : "mt-4 rounded-xl bg-white/70 p-3"}
       onSubmit={(e) => {
         e.preventDefault();
-        saveTestCode(code);
+        // A paid access code typed here is kept as one (sent in its own header), not as a tester code.
+        if (looksLikeAccessCode(code)) saveAccessCode(code);
+        else saveTestCode(code);
         const ok = Boolean(code.trim());
         setSaved(ok);
         if (ok) onSaved?.();

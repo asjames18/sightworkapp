@@ -2,10 +2,11 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { saveAccessCode } from "@/lib/client/accessCode";
 
 type State =
   | { s: "loading" }
-  | { s: "ready"; code: string; plan: string }
+  | { s: "ready"; code: string; plan: string; kept: boolean }
   | { s: "pending" }
   | { s: "error"; msg: string };
 
@@ -30,7 +31,7 @@ export function BillingDone() {
         });
         const j = (await r.json()) as { code?: string; plan?: string; error?: string; pending?: boolean };
         if (cancelled) return;
-        if (r.ok && j.code) setSt({ s: "ready", code: j.code, plan: j.plan ?? "" });
+        if (r.ok && j.code) setSt({ s: "ready", code: j.code, plan: j.plan ?? "", kept: saveAccessCode(j.code) });
         else if (j.pending) setSt({ s: "pending" });
         else setSt({ s: "error", msg: j.error ?? "We can't confirm your purchase right now." });
       } catch {
@@ -76,6 +77,11 @@ export function BillingDone() {
           <p className="mt-1 max-w-2xl text-sm text-ink/75">
             Save it somewhere safe. Anyone with this code can use your plans, and this page is the only place it is shown.
           </p>
+          {st.kept && (
+            <p className="mt-1 max-w-2xl text-sm text-ink/75" data-testid="code-kept">
+              It&apos;s also saved on this device, so Make a plan uses it here. On another device, enter it when you&apos;re asked for a code.
+            </p>
+          )}
           <code
             data-testid="access-code"
             className="mt-3 block break-all rounded-lg border border-ink/20 bg-ink/5 p-3 text-sm"
