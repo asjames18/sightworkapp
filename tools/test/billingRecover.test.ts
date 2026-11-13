@@ -1,7 +1,7 @@
 /** /api/billing/recover logic: re-issued codes go only to the buyer's email; the screen answer never changes. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { handleBillingRecover, RECOVER_MESSAGE, resendSender } from "@/lib/billing/recover";
+import { brevoSender, handleBillingRecover, mailSender, parseSender, RECOVER_MESSAGE, resendSender } from "@/lib/billing/recover";
 import { verifyAccessCode } from "@/lib/billing/accessCode";
 
 const SECRET = "x".repeat(40);
@@ -89,4 +89,46 @@ test("resendSender needs both settings and posts one JSON mail", async () => {
   await s!({ to: "a@b.co", subject: "s", text: "t" });
   assert.equal(calls[0].url, "https://api.resend.com/emails");
   assert.deepEqual(JSON.parse(calls[0].body).to, ["a@b.co"]);
+});
+
+test("parseSender reads a named or bare sender and refuses anything else", () => {
+  assert.deepEqual(parseSender("SightWork <no-reply@example.com>"), { name: "SightWork", email: "no-reply@example.com" });
+  assert.deepEqual(parseSender('"Sight Work" <a@b.co>'), { name: "Sight Work", email: "a@b.co" });
+  assert.deepEqual(parseSender("<a@b.co>"), { email: "a@b.co" });
+  assert.deepEqual(parseSender(" a@b.co "), { email: "a@b.co" });
+  for (const bad of ["", "SightWork", "SightWork <nope>", "a@b", "x <a@b.co> y"]) assert.equal(parseSender(bad), null, bad);
+});
+
+test("brevoSender needs a key and a valid sender, and posts one transactional mail", async () => {
+  assert.equal(brevoSender({ BREVO_API_KEY: "xkeysib-x" }), null);
+  assert.equal(brevoSender({ SIGHTWORK_MAIL_FROM: "SightWork <hi@example.com>" }), null);
+  assert.equal(brevoSender({ BREVO_API_KEY: "xkeysib-x", SIGHTWORK_MAIL_FROM: "not an address" }), null);
+  const calls: { url: string; headers: Record<string, string>; body: string }[] = [];
+  const s = brevoSender({ BREVO_API_KEY: " xkeysib-x ", SIGHTWORK_MAIL_FROM: "SightWork <hi@example.com>" }, (async (url: string, init: { headers: Record<string, string>; body: string }) => {
+    calls.push({ url, headers: init.headers, body: init.body });
+    return { ok: true, status: 201 };
+  }) as unknown as typeof fetch);
+  await s!({ to: "a@b.co", subject: "s", text: "t" });
+  assert.equal(calls.length, 1);
+  assert.equal(calls[0].url, "https://api.brevo.com/v3/smtp/email");
+  assert.equal(calls[0].headers["api-key"], "xkeysib-x");
+  assert.deepEqual(JSON.parse(calls[0].body), { sender: { name: "SightWork", email: "hi@example.com" }, to: [{ email: "a@b.co" }], subject: "s", textContent: "t" });
+});
+
+test("brevoSender throws on a refused send so recovery answers 503", async () => {
+  const s = brevoSender({ BREVO_API_KEY: "xkeysib-x", SIGHTWORK_MAIL_FROM: "hi@example.com" }, (async () => ({ ok: false, status: 401 })) as unknown as typeof fetch);
+  await assert.rejects(() => s!({ to: "a@b.co", subject: "s", text: "t" }), /401/);
+});
+
+test("mailSender prefers Brevo, falls back to Resend, else null", async () => {
+  const urls: string[] = [];
+  const f = (async (url: string) => {
+    urls.push(url);
+    return { ok: true, status: 200 };
+  }) as unknown as typeof fetch;
+  const from = "SightWork <hi@example.com>";
+  await mailSender({ BREVO_API_KEY: "k", RESEND_API_KEY: "r", SIGHTWORK_MAIL_FROM: from }, f)!({ to: "a@b.co", subject: "s", text: "t" });
+  await mailSender({ RESEND_API_KEY: "r", SIGHTWORK_MAIL_FROM: from }, f)!({ to: "a@b.co", subject: "s", text: "t" });
+  assert.deepEqual(urls, ["https://api.brevo.com/v3/smtp/email", "https://api.resend.com/emails"]);
+  assert.equal(mailSender({ SIGHTWORK_MAIL_FROM: from }), null);
 });

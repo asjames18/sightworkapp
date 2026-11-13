@@ -39,6 +39,34 @@ export function resendSender(env: Record<string, string | undefined>, fetchImpl:
   };
 }
 
+/** "SightWork <no-reply@example.com>" or a bare address, as Brevo's {name, email} sender. Null when it isn't an address. */
+export function parseSender(from: string): { name?: string; email: string } | null {
+  const m = /^\s*(?:"?([^"<>]{1,100}?)"?\s*)?<([^\s<>@]{1,64}@[A-Za-z0-9.-]{1,190}\.[A-Za-z]{2,24})>\s*$/.exec(from);
+  if (m) return m[1]?.trim() ? { name: m[1].trim(), email: m[2] } : { email: m[2] };
+  const bare = from.trim();
+  return EMAIL.test(bare) ? { email: bare } : null;
+}
+
+/** Sends through Brevo's transactional API when BREVO_API_KEY and SIGHTWORK_MAIL_FROM are set; otherwise null. */
+export function brevoSender(env: Record<string, string | undefined>, fetchImpl: typeof fetch = fetch): MailSender | null {
+  const key = env.BREVO_API_KEY?.trim();
+  const sender = parseSender(env.SIGHTWORK_MAIL_FROM?.trim() ?? "");
+  if (!key || !sender) return null;
+  return async (m) => {
+    const res = await fetchImpl("https://api.brevo.com/v3/smtp/email", {
+      method: "POST",
+      headers: { "api-key": key, "Content-Type": "application/json", Accept: "application/json" },
+      body: JSON.stringify({ sender, to: [{ email: m.to }], subject: m.subject, textContent: m.text }),
+    });
+    if (!res.ok) throw new Error(`mail service answered ${res.status}`);
+  };
+}
+
+/** The mail sender for this server: Brevo when it's set up, else Resend, else null (recovery answers 503). */
+export function mailSender(env: Record<string, string | undefined>, fetchImpl: typeof fetch = fetch): MailSender | null {
+  return brevoSender(env, fetchImpl) ?? resendSender(env, fetchImpl);
+}
+
 export async function handleBillingRecover(
   rawBody: unknown,
   ctx: { env?: Record<string, string | undefined>; fetchImpl?: GetLike; sendMail?: MailSender | null; now?: () => number },
@@ -50,7 +78,7 @@ export async function handleBillingRecover(
   if (!EMAIL.test(email)) return { status: 400, body: { error: "Enter the email you used to pay." } };
   const key = env.STRIPE_SECRET_KEY?.trim();
   const secret = accessSecret(env.SIGHTWORK_ACCESS_SECRET);
-  const send = ctx.sendMail === undefined ? resendSender(env) : ctx.sendMail;
+  const send = ctx.sendMail === undefined ? mailSender(env) : ctx.sendMail;
   if (!key || !/^(sk|rk)_(test|live)_[A-Za-z0-9]+$/.test(key) || !secret || !send) {
     console.error(JSON.stringify({ event: "sightwork_billing_recover_failed", detail: "not configured" }));
     return { status: 503, body: { error: "We can't look that up right now. Please try again in a few minutes." } };

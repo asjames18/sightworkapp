@@ -15,7 +15,7 @@ Copy the lines from `.env.example` into your host's environment (never into the 
 | `STRIPE_SECRET_KEY` | Stripe key for the mode you run (use a `sk_test_` key everywhere except production). |
 | `STRIPE_WEBHOOK_SECRET` | Signing secret (`whsec_...`) of the webhook endpoint. |
 | `SIGHTWORK_PRICE_*` | One Stripe price id per plan, from the same Stripe mode as the key. |
-| `RESEND_API_KEY`, `SIGHTWORK_MAIL_FROM` | Optional. Needed only for "find my purchase" emails; without them that form answers 503. |
+| `BREVO_API_KEY` (or `RESEND_API_KEY`), `SIGHTWORK_MAIL_FROM` | Optional. Needed only for "find my purchase" emails; without them that form answers 503. Brevo is used when its key is set. `SIGHTWORK_MAIL_FROM` looks like `SightWork <no-reply@example.com>` on a domain verified with the mail service. |
 
 ## Test in Stripe test mode
 
