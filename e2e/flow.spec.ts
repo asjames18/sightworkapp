@@ -248,9 +248,22 @@ test("real run of an all-black take stops on the device with a clear message and
 
 test("the server gate answers 401 to an API call with no tester code", async ({ request }) => {
   // Body is deliberately empty: even past the gate it would be rejected before any model call.
-  const res = await request.post("/api/plan", { data: {} });
+  const res = await request.post("/api/other", { data: {} });
   expect(res.status()).toBe(401);
   expect(res.headers()["cache-control"]).toContain("no-store");
+});
+
+test("with billing on, a plan or transcribe run needs a paid access code; a tester code alone gets 402", async ({ request }) => {
+  // The e2e server runs with SIGHTWORK_BILLING=on. Bodies are empty: nothing here can reach a model.
+  for (const path of ["/api/plan", "/api/transcribe"]) {
+    const variants: Record<string, string>[] = [{}, { "x-sightwork-test-code": "any-tester-code" }];
+    for (const headers of variants) {
+      const res = await request.post(path, { data: {}, headers });
+      expect(res.status(), path).toBe(402);
+      expect(res.headers()["cache-control"]).toContain("no-store");
+      expect((await res.json()).error).toMatch(/paid access code/);
+    }
+  }
 });
 
 test("a step failure (?fail=planning) shows the error card, and Try again runs it again", async ({ page }) => {

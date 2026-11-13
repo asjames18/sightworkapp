@@ -93,6 +93,7 @@ test("the real checkout route skips the tester-code gate and fails plainly witho
     data: { plan: "nope" },
   });
   expect(bad.status()).toBe(400);
-  // Other API routes stay gated.
-  expect((await request.post("/api/plan", { data: {} })).status()).toBe(401);
+  // Other API routes stay gated; plan runs need a paid access code while billing is on.
+  expect((await request.post("/api/other", { data: {} })).status()).toBe(401);
+  expect((await request.post("/api/plan", { data: {} })).status()).toBe(402);
 });

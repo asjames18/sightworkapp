@@ -10,7 +10,7 @@ Copy the lines from `.env.example` into your host's environment (never into the 
 
 | Setting | What it is |
 | --- | --- |
-| `SIGHTWORK_BILLING` | Set to `on` to turn on checkout, the pricing page and paid access codes. |
+| `SIGHTWORK_BILLING` | Set to `on` to turn on checkout, the pricing page and paid access codes. With it on, server plan runs (`/api/plan`, `/api/transcribe`) need a paid access code; the tester code no longer opens them. Own-key runs are unaffected. |
 | `SIGHTWORK_ACCESS_SECRET` | 32 or more random characters. Signs access codes. Changing it invalidates every code. |
 | `STRIPE_SECRET_KEY` | Stripe key for the mode you run (use a `sk_test_` key everywhere except production). |
 | `STRIPE_WEBHOOK_SECRET` | Signing secret (`whsec_...`) of the webhook endpoint. |

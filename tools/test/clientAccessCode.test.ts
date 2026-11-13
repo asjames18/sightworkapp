@@ -2,7 +2,7 @@
 import { test, describe, afterEach } from "node:test";
 import assert from "node:assert/strict";
 import { ACCESS_CODE_HEADER, loadAccessCode, looksLikeAccessCode, saveAccessCode } from "@/lib/client/accessCode";
-import { ACCESS_CODE_MESSAGE, createApiPlanJob, TESTER_CODE_MESSAGE, WRONG_CODE_MESSAGE } from "@/lib/client/apiPlanJob";
+import { ACCESS_CODE_MESSAGE, createApiPlanJob, PAID_PLAN_MESSAGE, TESTER_CODE_MESSAGE, WRONG_CODE_MESSAGE } from "@/lib/client/apiPlanJob";
 import { saveLocation } from "@/lib/client/location";
 import { saveTestCode, TEST_CODE_HEADER } from "@/lib/client/testCode";
 import type { PlanJobStatus, PlanRequest } from "@/lib/types";
@@ -119,6 +119,35 @@ describe("server plan runs with an access code", () => {
     const b = last(st);
     assert.ok(b.state === "failed");
     assert.equal(b.message, WRONG_CODE_MESSAGE);
+  });
+  test("with billing on, a tester code alone gets 402 and is pointed to a paid plan or an own key", async () => {
+    fakeWindow();
+    saveTestCode("tester");
+    saveLocation({ city: "Sebring", state: "FL" });
+    const { statuses, seen } = await run(402);
+    const s = last(statuses);
+    assert.ok(s.state === "failed");
+    assert.equal(s.message, PAID_PLAN_MESSAGE);
+    assert.deepEqual(seen.map((x) => x.url), ["/api/transcribe"], "stops before the plan request");
+    noWindow();
+    fakeWindow();
+    saveTestCode("tester");
+    saveLocation({ city: "Sebring", state: "FL" });
+    const req: PlanRequest = { durationSec: 30, frames: [{ tSec: 0, dataUrl: "data:image/jpeg;base64,AA==" }] };
+    const realFetch = globalThis.fetch;
+    globalThis.fetch = (async () => new Response("{}", { status: 402 })) as typeof fetch;
+    const st: PlanJobStatus[] = [];
+    const err = console.error;
+    console.error = () => {};
+    try {
+      await createApiPlanJob(async () => req)({ file: {} as File, onStatus: (x) => st.push(x), signal: new AbortController().signal });
+    } finally {
+      globalThis.fetch = realFetch;
+      console.error = err;
+    }
+    const b = last(st);
+    assert.ok(b.state === "failed");
+    assert.equal(b.message, PAID_PLAN_MESSAGE, "same text when the plan request itself is refused");
   });
   test("with no code at all, nothing is sent", async () => {
     fakeWindow();

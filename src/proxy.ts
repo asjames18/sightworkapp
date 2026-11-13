@@ -36,11 +36,30 @@ function paidRun(request: NextRequest): boolean {
   return code.startsWith("sw1.") && code.length <= MAX_ACCESS_CODE_LENGTH;
 }
 
+/**
+ * With billing on, plan runs are paid: a POST to /api/plan or /api/transcribe needs a paid access code
+ * (checked by the route) and the tester code no longer opens one. Own-key runs go straight from the browser
+ * to Meta and never reach these routes. With billing off, the tester gate below applies as before.
+ */
+function paidPathWithoutCode(request: NextRequest): boolean {
+  return (
+    billingEnabled(process.env.SIGHTWORK_BILLING) &&
+    request.method === "POST" &&
+    PAID_PATHS.has(request.nextUrl.pathname)
+  );
+}
+
 export function proxy(request: NextRequest) {
   if (BILLING_ROUTE.test(request.nextUrl.pathname)) return NextResponse.next();
   if (paidRun(request)) {
     console.log(JSON.stringify({ event: "sightwork_paid_run", path: request.nextUrl.pathname, at: new Date().toISOString() }));
     return NextResponse.next();
+  }
+  if (paidPathWithoutCode(request)) {
+    return NextResponse.json(
+      { error: "Plan runs need a paid access code. See /pricing, or use your own key." },
+      { status: 402, headers: { "Cache-Control": "no-store" } },
+    );
   }
   const expected = process.env.SIGHTWORK_TEST_CODE?.trim() ?? "";
   const given = request.headers.get(HEADER)?.trim() ?? "";

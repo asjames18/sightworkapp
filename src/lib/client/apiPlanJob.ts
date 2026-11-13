@@ -115,6 +115,10 @@ export function isResumeFailure(message: string): boolean {
 export const ACCESS_CODE_MESSAGE =
   "Your access code isn't active. Check your plan on the pricing page, or open the example plan.";
 
+/** A 402 with no access code sent: billing is on, so a tester code alone no longer opens a real run. */
+export const PAID_PLAN_MESSAGE =
+  "Real runs need a paid plan. Get one on the pricing page, add your own key in Settings, or open the example plan.";
+
 export function messageForStatus(status: number): string {
   if (status === 401) return TESTER_CODE_MESSAGE;
   if (status === 402) return ACCESS_CODE_MESSAGE;
@@ -391,7 +395,7 @@ export function createApiPlanJob(
         return;
       }
       if (split === "refused") {
-        fail(messageForStatus(402));
+        fail(accessCode ? messageForStatus(402) : PAID_PLAN_MESSAGE);
         return;
       }
       body = split.body;
@@ -425,7 +429,15 @@ export function createApiPlanJob(
       if (!res.ok) await logServerError(res);
       // A tester code was sent, so a 401 means the server refused it; with only an access code, a 401 means
       // the server isn't taking paid runs, and the tester-code prompt is the way in.
-      fail(res.ok ? GENERIC_FAIL : res.status === 401 && testCode ? WRONG_CODE_MESSAGE : messageForStatus(res.status));
+      fail(
+        res.ok
+          ? GENERIC_FAIL
+          : res.status === 401 && testCode
+            ? WRONG_CODE_MESSAGE
+            : res.status === 402 && !accessCode
+              ? PAID_PLAN_MESSAGE
+              : messageForStatus(res.status),
+      );
       return;
     }
 

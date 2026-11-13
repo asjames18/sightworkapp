@@ -24,8 +24,15 @@ for (const path of ["/", "/start", "/start?view=example&ex=sanctuary", "/status"
 }
 
 test("the API gate answers 401 without a tester code and keeps the headers", async ({ request }) => {
-  const res = await request.post("/api/plan", { data: {} });
+  const res = await request.post("/api/other", { data: {} });
   expect(res.status()).toBe(401);
+  expect(res.headers()["x-content-type-options"]).toBe("nosniff");
+  expect(res.headers()["cache-control"]).toContain("no-store");
+});
+
+test("a plan run without a paid access code (billing on) answers 402 and keeps the headers", async ({ request }) => {
+  const res = await request.post("/api/plan", { data: {} });
+  expect(res.status()).toBe(402);
   expect(res.headers()["x-content-type-options"]).toBe("nosniff");
   expect(res.headers()["cache-control"]).toContain("no-store");
 });
