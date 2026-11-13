@@ -259,6 +259,16 @@ export async function POST(req: Request): Promise<Response> {
   // request that would spend money counts against the bucket.
   const planLimit = planRateLimiter.check(clientIp(req));
   if (!planLimit.allowed) {
+    // A refused request leaves a server-log trace, like the
+    // entitlement denials (2026-11-13): without it a burst of 429s is
+    // invisible except in the client. Same JSON-event shape, no IP.
+    console.log(
+      JSON.stringify({
+        event: "sightwork_rate_limited",
+        route: "plan",
+        retryAfterSec: planLimit.retryAfterSec,
+      }),
+    );
     return new Response(
       JSON.stringify({ error: "Too many plan requests. Try again shortly." }),
       {
