@@ -748,15 +748,18 @@ export const PICTURING_TIME_LIMIT_MS = 230_000;
 
 /**
  * Pure check for the picturing time-limit skip: true once the run is
- * at least PICTURING_TIME_LIMIT_MS old. nowMs defaults to Date.now
- * so runPlan reads the clock at picturing; tests pass it explicitly
- * for an exact boundary.
+ * at least limitMs old (default PICTURING_TIME_LIMIT_MS, the host's
+ * function limit; a caller may pass its own limit, e.g. Infinity for
+ * a run in the user's own browser, which never exceeds). nowMs
+ * defaults to Date.now so runPlan reads the clock at picturing;
+ * tests pass it explicitly for an exact boundary.
  */
 export function picturingTimeLimitExceeded(
   startedAtMs: number,
   nowMs: number = Date.now(),
+  limitMs: number = PICTURING_TIME_LIMIT_MS,
 ): boolean {
-  return nowMs - startedAtMs >= PICTURING_TIME_LIMIT_MS;
+  return nowMs - startedAtMs >= limitMs;
 }
 
 /**
@@ -1021,6 +1024,14 @@ export function validateRunPlanDeps(deps: RunPlanDeps): void {
     (!Number.isFinite(deps.startedAtMs) || deps.startedAtMs < 0)
   ) {
     throw new Error("runPlan: startedAtMs must be a finite number >= 0 when given");
+  }
+  if (
+    deps.picturingLimitMs !== undefined &&
+    (typeof deps.picturingLimitMs !== "number" ||
+      Number.isNaN(deps.picturingLimitMs) ||
+      deps.picturingLimitMs < 0)
+  ) {
+    throw new Error("runPlan: picturingLimitMs must be a number >= 0 when given");
   }
 }
 
@@ -2078,7 +2089,7 @@ export async function runPlan(request: PlanRequest, deps: RunPlanDeps): Promise<
   // and a ran:false review below, instead of no plan at all. A
   // time-skipped picturing arrives only via the done plan's
   // meta.skipped, like every other picturing skip (see above).
-  const picturingTimeSkipped = (deps.picturingLimitMs ?? PICTURING_TIME_LIMIT_MS) !== Infinity && picturingTimeLimitExceeded(runStartedAtMs);
+  const picturingTimeSkipped = (deps.picturingLimitMs ?? PICTURING_TIME_LIMIT_MS) !== Infinity && picturingTimeLimitExceeded(runStartedAtMs, Date.now(), deps.picturingLimitMs ?? PICTURING_TIME_LIMIT_MS);
   if (picturingTimeSkipped) {
     console.log(
       `runPlan: picturing skipped: time-limit (elapsed ${Date.now() - runStartedAtMs} ms)`,
