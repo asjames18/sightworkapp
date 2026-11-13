@@ -33,7 +33,7 @@ test("with a key saved, the run goes from this browser to Meta with the key: no 
     await page.goto("/start");
     await page.getByTestId("choose-video-input").setInputFiles(WALKTHROUGH);
     await page.getByRole("button", { name: "Make my work plan" }).click();
-    await expect(page.getByText("Enter the tester code to make a plan from this video.")).toHaveCount(0);
+    await expect(page.getByTestId("run-choice")).toHaveCount(0);
     await expect(page.getByRole("heading", { level: 1, name: "We couldn't finish your plan" })).toBeVisible({ timeout: 60_000 });
     await expect(page.getByText("Meta didn't accept your API key.", { exact: false })).toBeVisible();
     await expect(page.getByRole("heading", { name: "Problems, worst first" })).toHaveCount(0);

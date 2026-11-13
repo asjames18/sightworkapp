@@ -41,7 +41,7 @@ test("real run: city and state are asked on the video card, and an empty one blo
   await expect(city).toBeFocused();
   await expect(city).toHaveAttribute("aria-invalid", "true");
   // Blocked before anything else: no code prompt, no run.
-  await expect(card.getByText("Enter the tester code to make a plan from this video.")).toHaveCount(0);
+  await expect(card.getByTestId("run-choice")).toHaveCount(0);
   await expect(page.getByRole("heading", { level: 1, name: "Working on your plan" })).toHaveCount(0);
   await expectNoAxeViolations(page, "city and state missing");
   await shoot(page, "city-region-blocked-390.png", card);
@@ -55,7 +55,7 @@ test("real run: city and state are asked on the video card, and an empty one blo
   await expect(card.getByRole("alert").filter({ hasText: /state where this space is/ })).toHaveCount(0);
   // Both filled: on to the tester-code prompt (no code saved), still nothing sent.
   await card.getByRole("button", { name: "Make my work plan" }).click();
-  await expect(card.getByText("Enter the tester code to make a plan from this video.")).toBeVisible();
+  await expect(card.getByTestId("run-choice")).toBeVisible();
 });
 
 test("city and state are remembered on this device", async ({ page }) => {

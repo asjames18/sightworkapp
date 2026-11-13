@@ -81,27 +81,34 @@ test("a clip under 5 seconds is blocked before anything runs", async ({ page }) 
   await expect(page.getByRole("button", { name: "Make my work plan" })).toBeDisabled();
 });
 
-test("real-run mode without a tester code asks for it on the video card and sends nothing", async ({ page }) => {
+test("real-run mode with nothing saved gates filming, then asks again on the video card, and sends nothing", async ({ page }) => {
   // City and state are saved here (e2e/city-region.spec.ts covers asking for them).
   await page.addInitScript(() => window.localStorage.setItem("sightwork:location", JSON.stringify({ city: "Sebring", state: "FL" })));
   await page.goto("/start?runner=api");
-  const code = page.getByLabel("Tester code for real runs");
-  await expect(code).toBeVisible();
+  // Before filming: the two ways to make a plan, and no record or choose buttons yet.
+  const gate = page.getByTestId("start-gate");
+  await expect(gate).toBeVisible();
+  await expect(gate.getByText("Use your own key (free)")).toBeVisible();
+  await expect(gate.getByRole("link", { name: /See plans and prices/ })).toHaveAttribute("href", "/pricing");
+  await expect(page.getByRole("button", { name: "Record a walkthrough" })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Choose a video" })).toHaveCount(0);
+  const code = gate.getByLabel("Access code");
   await expect(code).toHaveValue("");
-  await expect(page.getByText("Real runs use paid model credits, so they need a code.")).toBeVisible();
-  await expectNoAxeViolations(page, "/start?runner=api");
+  await expectNoAxeViolations(page, "/start?runner=api gate");
 
+  // A video that still arrives (a drop, a saved take) is asked about again on the video card.
   await page.getByTestId("choose-video-input").setInputFiles(WALKTHROUGH);
   await expect(page.getByText("Frames and narration are sent to make your plan.")).toBeVisible();
   await page.getByRole("button", { name: "Make my work plan" }).click();
-  // No run, no example plan: the code prompt opens on the same video card.
   const card = page.getByRole("group", { name: "Your walkthrough" });
-  await expect(card.getByText("Enter the tester code to make a plan from this video.")).toBeVisible();
-  await expect(card.getByLabel("Tester code for real runs")).toBeFocused();
+  await expect(card.getByTestId("run-choice")).toBeVisible();
+  await expect(card.getByRole("heading", { name: "How do you want to make this plan?" })).toBeFocused();
+  await expect(card.getByTestId("run-choice-pricing")).toHaveAttribute("href", "/pricing");
+  await expect(card.getByLabel("Your Meta API key")).toBeVisible();
   await expect(card).toContainText("walkthrough-6s.webm");
   await expect(page.getByRole("heading", { level: 1, name: "Working on your plan" })).toHaveCount(0);
   await expect(page.getByRole("heading", { name: "Problems, worst first" })).toHaveCount(0);
-  await expectNoAxeViolations(page, "tester code prompt on the video card");
+  await expectNoAxeViolations(page, "run choice on the video card");
   // The apiCalls fixture then checks that no /api request left the browser.
 });
 
@@ -130,8 +137,8 @@ async function stubRealRun(page: import("@playwright/test").Page) {
 async function saveCodeAndRun(page: import("@playwright/test").Page, sent: { path: string; code: string | null; bytes: number }[]) {
   const card = page.getByRole("group", { name: "Your walkthrough" });
   await page.getByRole("button", { name: "Make my work plan" }).click();
-  await expect(card.getByText("Enter the tester code to make a plan from this video.")).toBeVisible();
-  await card.getByLabel("Tester code for real runs").fill("stub-code");
+  await expect(card.getByTestId("run-choice")).toBeVisible();
+  await card.getByLabel("Access code").fill("stub-code");
   await card.getByRole("button", { name: "Save and make my plan" }).click();
   await expect(page.getByRole("heading", { level: 1, name: "We couldn't finish your plan" })).toBeVisible({ timeout: 30_000 });
   await expect(page.getByText("Stub stop for the test.")).toBeVisible();
@@ -149,9 +156,14 @@ test("own chosen video, no code saved: prompt, then a real run on that video (ne
   await saveCodeAndRun(page, sent);
 });
 
-test("own recorded video, no code saved: prompt, then a real run on that take (never the example plan)", async ({ page }) => {
+test("own recorded video: the code goes in at the gate before filming, then a real run on that take (never the example plan)", async ({ page }) => {
   const sent = await stubRealRun(page);
   await page.goto("/start?runner=api");
+  // Nothing saved: filming waits behind the gate until a code (or own key) is in.
+  await expect(page.getByRole("button", { name: "Record a walkthrough" })).toHaveCount(0);
+  const gate = page.getByTestId("start-gate");
+  await gate.getByLabel("Access code").fill("stub-code");
+  await gate.getByRole("button", { name: "Save code" }).click();
   await page.getByRole("button", { name: "Record a walkthrough" }).click();
   const cam = page.getByRole("group", { name: "Camera" });
   await expect(cam).toHaveAttribute("data-phase", "ready");
@@ -159,7 +171,12 @@ test("own recorded video, no code saved: prompt, then a real run on that take (n
   await page.waitForTimeout(6300);
   await cam.getByRole("button", { name: "Stop recording" }).click();
   await expect(page.getByRole("group", { name: "Your walkthrough" })).toContainText(/walkthrough-\d{4}-\d{2}-\d{2}-\d{4}\.(webm|mp4)/);
-  await saveCodeAndRun(page, sent);
+  await page.getByRole("button", { name: "Make my work plan" }).click();
+  await expect(page.getByRole("heading", { level: 1, name: "We couldn't finish your plan" })).toBeVisible({ timeout: 30_000 });
+  await expect(page.getByText("Stub stop for the test.")).toBeVisible();
+  const plan = sent.find((s) => s.path === "/api/plan");
+  expect(plan, "a real-run request was sent").toBeTruthy();
+  expect(plan?.code).toBe("stub-code");
 });
 
 test("quiet narration is brought up to a level speech recognition can hear before it is sent", async ({ page }) => {
@@ -228,7 +245,7 @@ test("a code the server refuses goes back to the same video with the code prompt
   await page.getByRole("button", { name: "Enter tester code" }).click();
   const card = page.getByRole("group", { name: "Your walkthrough" });
   await expect(card).toContainText("walkthrough-6s.webm");
-  await expect(card.getByText("Enter the tester code to make a plan from this video.")).toBeVisible();
+  await expect(card.getByTestId("run-choice")).toBeVisible();
 });
 });
 
