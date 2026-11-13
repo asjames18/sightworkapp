@@ -277,6 +277,19 @@ export async function POST(req: Request): Promise<Response> {
           .join(", "),
     );
     console.error(`transcribe route: ${err instanceof Error ? err.message : String(err)}`);
+    // A failed transcribe leaves a countable server-log trace
+    // (2026-11-13): the lines above are plain text, so a 500 is
+    // otherwise invisible to a log counter. Same JSON-event shape as
+    // the refusal logs; cost is the spike total (0 when nothing
+    // billed). The event fires whenever the route answers a 500,
+    // matching the plan route's failed-line event.
+    console.log(
+      JSON.stringify({
+        event: "sightwork_run_failed",
+        route: "transcribe",
+        costUsd: tracker.totals().spikeTotalUsd,
+      }),
+    );
     // Parity with the success path (and the 7:45 AM costUsd change):
     // a billed ASR failure is already recorded on the tracker by the
     // transcribe step's recordFailedCall, so the 500 carries the same
