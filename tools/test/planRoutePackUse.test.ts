@@ -3,7 +3,10 @@
  * calls recordPackUse right after the done line; a sub code records
  * nothing, a failed tally still ships the plan, and billing off never
  * touches Stripe. A pack with no plans left is 402 with reason "used-up"
- * (2026-11-13), so the client can show the pack-used-up text.
+ * (2026-11-13), so the client can show the pack-used-up text. The tally
+ * is logged on success (sightwork_pack_use, with the new count) and on
+ * failure (sightwork_pack_use_failed), so pack usage is auditable from
+ * the server log without a separate Stripe read.
  * Keyless, Stripe + Baseten + Meta all stubbed.
  */
 import { test, describe } from "node:test";
@@ -76,6 +79,7 @@ interface Run {
   stripePosts: { url: string; body: string }[];
   status: number;
   raw: string;
+  logs: string[];
 }
 
 /**
@@ -101,6 +105,7 @@ async function run(opts: {
   const realWarn = console.warn;
   const stripeGets: string[] = [];
   const stripePosts: { url: string; body: string }[] = [];
+  const logs: string[] = [];
   globalThis.fetch = (async (input: string | URL | Request, init?: RequestInit) => {
     const url = typeof input === "string" ? input : input instanceof URL ? input.href : input.url;
     const method = (init?.method ?? "GET").toUpperCase();
@@ -148,7 +153,9 @@ async function run(opts: {
     return new Response(JSON.stringify({ error: { message: "offline test" } }), { status: 400 });
   }) as typeof fetch;
   console.error = () => {};
-  console.log = () => {};
+  console.log = (...args: unknown[]) => {
+    logs.push(args.map(String).join(" "));
+  };
   console.warn = () => {};
   try {
     const payload = JSON.stringify({
@@ -171,6 +178,7 @@ async function run(opts: {
       stripePosts,
       status: res.status,
       raw: text,
+      logs,
     };
   } finally {
     globalThis.fetch = realFetch;
@@ -215,11 +223,31 @@ describe("POST /api/plan pack tally (offline, stubbed Stripe + Baseten)", () => 
     assert.equal(stripePosts.length, 0);
   });
 
+  test("pack code: a finished plan logs the tally (used 3)", async () => {
+    const { lines, logs } = await run({ env: BILLING_ENV, code: pack });
+    donePlan(lines);
+    const tally = logs.map((l) => {
+      try {
+        return JSON.parse(l) as unknown;
+      } catch {
+        return null;
+      }
+    });
+    assert.deepEqual(
+      tally.find((e) => (e as { event?: unknown } | null)?.event === "sightwork_pack_use"),
+      { event: "sightwork_pack_use", customer: CUSTOMER, used: 3 },
+    );
+  });
+
   test("pack code: a failed tally still ships the plan", async () => {
-    const { lines, stripePosts } = await run({ env: BILLING_ENV, code: pack, recordPostStatus: 500 });
+    const { lines, stripePosts, logs } = await run({ env: BILLING_ENV, code: pack, recordPostStatus: 500 });
     donePlan(lines);
     assert.ok(!lines.some((l) => l.state === "failed"));
     assert.equal(stripePosts.length, 1, "tally was attempted, not skipped");
+    assert.ok(
+      logs.some((l) => l.includes('"event":"sightwork_pack_use_failed"')),
+      "tally failure is logged",
+    );
   });
 
   test("billing off: a pack code runs free and Stripe is never called", async () => {
