@@ -122,6 +122,14 @@ export async function POST(req: Request): Promise<Response> {
   if (accessCode) {
     const entitlement = await checkEntitlement(accessCode);
     if (!entitlement.allowed && entitlement.reason !== "off") {
+      // A denied code leaves a server-log trace (reason only, never the
+      // code): a tampered code, an exhausted pack, or a Stripe outage
+      // is otherwise invisible — the 402/503 alone says nothing about
+      // how often paid runs are refused. Same JSON-event shape as the
+      // plan route's pack-use log.
+      console.log(
+        JSON.stringify({ event: "sightwork_entitlement_denied", reason: entitlement.reason }),
+      );
       return errorResponse(
         entitlement.reason === "unavailable"
           ? "We can't check your plan right now. Try again shortly."
@@ -137,6 +145,12 @@ export async function POST(req: Request): Promise<Response> {
   try {
     bodyText = await req.text();
   } catch {
+    // An unreadable body leaves a server-log trace, like the
+    // entitlement denials, the rate-limit refusals and the
+    // body-too-large refusals (2026-11-13): without it a client
+    // posting garbage is refused with no trace at all. Same
+    // JSON-event shape; route only, never the body.
+    console.log(JSON.stringify({ event: "sightwork_unreadable_body", route: "transcribe" }));
     return errorResponse("could not read transcribe request body", 400);
   }
 
@@ -144,6 +158,17 @@ export async function POST(req: Request): Promise<Response> {
   // cannot be a valid request (the step caps audio at 32 MB decoded),
   // so the 413 changes no valid request, it just fails fast.
   if (transcribeBodyTooLarge(bodyText)) {
+    // A refused request leaves a server-log trace, like the
+    // entitlement denials and the rate-limit refusals (2026-11-13):
+    // an oversize body is otherwise invisible except in the client.
+    // Same JSON-event shape; bytes only, never the body.
+    console.log(
+      JSON.stringify({
+        event: "sightwork_body_too_large",
+        route: "transcribe",
+        bytes: new TextEncoder().encode(bodyText).length,
+      }),
+    );
     return errorResponse("transcribe request body too large", 413);
   }
 
@@ -151,12 +176,21 @@ export async function POST(req: Request): Promise<Response> {
   try {
     parsed = JSON.parse(bodyText);
   } catch {
+    // Same unreadable-body trace as the read failure above: a body
+    // that is not JSON is refused with a 400 and no trace.
+    console.log(JSON.stringify({ event: "sightwork_unreadable_body", route: "transcribe" }));
     return errorResponse("could not read transcribe request", 400);
   }
 
   try {
     validateTranscribeInput(parsed as { audioWavBase64?: string; spaceType?: string });
   } catch (err) {
+    // Same JSON-event trace as the plan route's invalid request
+    // (2026-11-13): validation was the last refusal path whose only
+    // trace was a plain-text console.error instead of a countable
+    // event. Route only, never the request content. The
+    // console.error detail stays for diagnosis.
+    console.log(JSON.stringify({ event: "sightwork_invalid_request", route: "transcribe" }));
     console.error(`transcribe route: invalid request: ${err instanceof Error ? err.message : String(err)}`);
     return errorResponse("That transcribe request was incomplete. Try again.", 400);
   }
@@ -178,6 +212,15 @@ export async function POST(req: Request): Promise<Response> {
   // only a request that would spend money counts against the bucket.
   const transcribeLimit = transcribeRateLimiter.check(clientIp(req));
   if (!transcribeLimit.allowed) {
+    // Same server-log trace as the plan route's 429: a refused
+    // request is otherwise invisible except in the client.
+    console.log(
+      JSON.stringify({
+        event: "sightwork_rate_limited",
+        route: "transcribe",
+        retryAfterSec: transcribeLimit.retryAfterSec,
+      }),
+    );
     return new Response(
       JSON.stringify({ error: "Too many transcribe requests. Try again shortly." }),
       {

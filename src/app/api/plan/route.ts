@@ -50,7 +50,7 @@
  * sitting first keeps invalid-code probes out of the rate limiter.
  * After the done line, a finished plan on a pack code is recorded
  * with recordPackUse (best-effort, logged on success and failure); a sub code
- * records nothing, and billing off records nothing.
+ * logs its use (sightwork_sub_use, no Stripe write), and billing off records nothing.
  */
 
 import { checkEntitlement, type Entitlement } from "../../../lib/billing/entitlement";
@@ -192,6 +192,14 @@ export async function POST(req: Request): Promise<Response> {
   if (accessCode) {
     entitlement = await checkEntitlement(accessCode);
     if (!entitlement.allowed && entitlement.reason !== "off") {
+      // A denied code leaves a server-log trace (reason only, never the
+      // code): a tampered code, an exhausted pack, or a Stripe outage
+      // is otherwise invisible — the 402/503 alone says nothing about
+      // how often paid runs are refused. Same JSON-event shape as the
+      // pack-use log below.
+      console.log(
+        JSON.stringify({ event: "sightwork_entitlement_denied", reason: entitlement.reason }),
+      );
       return new Response(
         JSON.stringify({
           error:
@@ -213,6 +221,12 @@ export async function POST(req: Request): Promise<Response> {
   try {
     bodyText = await req.text();
   } catch {
+    // An unreadable body leaves a server-log trace, like the
+    // entitlement denials, the rate-limit refusals and the
+    // body-too-large refusals (2026-11-13): without it a client
+    // posting garbage is refused with no trace at all. Same
+    // JSON-event shape; route only, never the body.
+    console.log(JSON.stringify({ event: "sightwork_unreadable_body", route: "plan" }));
     // JSON {error} (not plain text) so the client can surface this
     // message on a non-OK response instead of only its generic one.
     return new Response(JSON.stringify({ error: "could not read request body" }), {
@@ -224,6 +238,17 @@ export async function POST(req: Request): Promise<Response> {
   // Agreed cap: the browser builder stays under 9 MB; over 10 MB the
   // client shows its own too-large message from the 413.
   if (planBodyTooLarge(bodyText)) {
+    // A refused request leaves a server-log trace, like the
+    // entitlement denials and the rate-limit refusals (2026-11-13):
+    // an oversize body is otherwise invisible except in the client.
+    // Same JSON-event shape; bytes only, never the body.
+    console.log(
+      JSON.stringify({
+        event: "sightwork_body_too_large",
+        route: "plan",
+        bytes: new TextEncoder().encode(bodyText).length,
+      }),
+    );
     // JSON {error} (not plain text) so the client can surface this
     // message on a non-OK response; the client still keys its
     // too-large message off the 413 status, so this changes no UI yet.
@@ -237,11 +262,28 @@ export async function POST(req: Request): Promise<Response> {
   try {
     parsed = JSON.parse(bodyText);
   } catch {
+    // Same unreadable-body trace as the read failure above: a body
+    // that is not JSON is refused with a failed line and no trace.
+    console.log(JSON.stringify({ event: "sightwork_unreadable_body", route: "plan" }));
     return failedLine("uploading", "We couldn't read that plan request. Try again.");
   }
 
   const problems = validatePlanRequest(parsed);
   if (problems.length > 0) {
+    // An invalid request leaves a server-log trace in the same
+    // JSON-event shape as the entitlement denials, the rate-limit
+    // refusals, the body-too-large refusals and the unreadable-body
+    // refusals (2026-11-13): validation was the last refusal path
+    // whose only trace was a plain-text console.error instead of a
+    // countable event. Count only, never the request content. The
+    // console.error detail stays for diagnosis.
+    console.log(
+      JSON.stringify({
+        event: "sightwork_invalid_request",
+        route: "plan",
+        problems: problems.length,
+      }),
+    );
     console.error(`plan route: invalid request: ${problems.join("; ")}`);
     return failedLine("uploading", "That plan request was incomplete. Try again.");
   }
@@ -251,6 +293,16 @@ export async function POST(req: Request): Promise<Response> {
   // request that would spend money counts against the bucket.
   const planLimit = planRateLimiter.check(clientIp(req));
   if (!planLimit.allowed) {
+    // A refused request leaves a server-log trace, like the
+    // entitlement denials (2026-11-13): without it a burst of 429s is
+    // invisible except in the client. Same JSON-event shape, no IP.
+    console.log(
+      JSON.stringify({
+        event: "sightwork_rate_limited",
+        route: "plan",
+        retryAfterSec: planLimit.retryAfterSec,
+      }),
+    );
     return new Response(
       JSON.stringify({ error: "Too many plan requests. Try again shortly." }),
       {
@@ -353,6 +405,15 @@ export async function POST(req: Request): Promise<Response> {
                 ? { event: "sightwork_pack_use", customer: entitlement.stripeId, used: r.used }
                 : { event: "sightwork_pack_use_failed", reason: r.reason },
             ),
+          );
+        } else if (entitlement?.allowed && entitlement.kind === "sub") {
+          // Sub use (2026-11-13): a subscription has no tally to
+          // record, but a finished plan on a sub code still logs its
+          // use, so a subscriber's completed plans are auditable
+          // from the server log without a separate Stripe read —
+          // the same gap the pack tally log closed. No Stripe write.
+          console.log(
+            JSON.stringify({ event: "sightwork_sub_use", customer: entitlement.stripeId }),
           );
         }
         console.log(
