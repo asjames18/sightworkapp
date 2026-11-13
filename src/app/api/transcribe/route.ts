@@ -186,6 +186,15 @@ export async function POST(req: Request): Promise<Response> {
   // only a request that would spend money counts against the bucket.
   const transcribeLimit = transcribeRateLimiter.check(clientIp(req));
   if (!transcribeLimit.allowed) {
+    // Same server-log trace as the plan route's 429: a refused
+    // request is otherwise invisible except in the client.
+    console.log(
+      JSON.stringify({
+        event: "sightwork_rate_limited",
+        route: "transcribe",
+        retryAfterSec: transcribeLimit.retryAfterSec,
+      }),
+    );
     return new Response(
       JSON.stringify({ error: "Too many transcribe requests. Try again shortly." }),
       {
