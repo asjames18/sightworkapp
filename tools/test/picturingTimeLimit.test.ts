@@ -58,7 +58,7 @@ function reasonJson(): unknown {
   };
 }
 
-async function run(startedAtMs?: number): Promise<{
+async function run(startedAtMs?: number, picturingLimitMs?: number): Promise<{
   plan: WorkPlan;
   statuses: PlanJobStatus[];
   imageCalls: number;
@@ -94,6 +94,7 @@ async function run(startedAtMs?: number): Promise<{
     reviewPrompt: buildReviewPrompt,
     onStatus: (s) => statuses.push(s),
     ...(startedAtMs !== undefined ? { startedAtMs } : {}),
+    ...(picturingLimitMs !== undefined ? { picturingLimitMs } : {}),
   };
   const plan = await runPlan(request, deps);
   return { plan, statuses, imageCalls, reviewCalls };
@@ -116,6 +117,19 @@ describe("picturing time-limit skip (offline)", () => {
     assert.equal(picturingTimeLimitExceeded(1000, 1000 + 312_000), true);
   });
 
+  test("a custom limit is honored, not the 230 s constant", () => {
+    assert.equal(picturingTimeLimitExceeded(1000, 1000 + 59_999, 60_000), false);
+    assert.equal(picturingTimeLimitExceeded(1000, 1000 + 60_000, 60_000), true);
+    // The old code compared against the constant here, so a 60 s limit
+    // would have kept picturing at 100 s in; now it skips.
+    assert.equal(picturingTimeLimitExceeded(1000, 1000 + 100_000, 60_000), true);
+    assert.equal(picturingTimeLimitExceeded(1000, 1000 + 230_000, 300_000), false);
+  });
+
+  test("an Infinity limit never exceeds", () => {
+    assert.equal(picturingTimeLimitExceeded(1000, 1000 + 1_000_000, Infinity), false);
+  });
+
   test("a stale run ships a plan with no image call, no review call, afterImage skipped, review not run", async () => {
     const { plan, statuses, imageCalls, reviewCalls } = await run(Date.now() - 240_000);
     assert.equal(imageCalls, 0, "no Image call on a stale run");
@@ -127,6 +141,21 @@ describe("picturing time-limit skip (offline)", () => {
     assert.ok(!statuses.some((s) => s.state === "failed"));
   });
 
+  test("a stale run with a short custom limit skips picturing even though it is under 230 s", async () => {
+    const { plan, imageCalls, reviewCalls } = await run(Date.now() - 2_000, 1_000);
+    assert.equal(imageCalls, 0, "no Image call under a 1 s limit at 2 s in");
+    assert.equal(reviewCalls, 0, "no review call under a 1 s limit at 2 s in");
+    assert.equal(plan.afterImageUrl, null);
+    assert.equal(plan.meta?.skipped?.afterImage, true);
+  });
+
+  test("a stale run with an Infinity limit still pictures", async () => {
+    const { plan, imageCalls, reviewCalls } = await run(Date.now() - 240_000, Infinity);
+    assert.equal(imageCalls, 1, "one Image call with no limit");
+    assert.equal(reviewCalls, 1, "one review call with no limit");
+    assert.equal(plan.afterImageUrl, JPEG);
+  });
+
   test("a fresh run still pictures and reviews", async () => {
     const { plan, statuses, imageCalls, reviewCalls } = await run();
     assert.equal(imageCalls, 1, "one Image call on a fresh run");
@@ -134,6 +163,31 @@ describe("picturing time-limit skip (offline)", () => {
     assert.equal(plan.afterImageUrl, JPEG);
     assert.equal(plan.meta?.skipped?.afterImage, undefined);
     assert.ok(!statuses.some((s) => s.state === "failed"));
+  });
+
+  test("a bad picturingLimitMs fails fast", () => {
+    const base = {
+      transcribe: {},
+      segment: {},
+      reason: {},
+      cost: {},
+      renderAfter: {},
+      tracker: { record() {}, totals() {} },
+    };
+    assert.throws(
+      () => validateRunPlanDeps({ ...base, picturingLimitMs: -1 } as unknown as RunPlanDeps),
+      /picturingLimitMs must be a number/,
+    );
+    assert.throws(
+      () => validateRunPlanDeps({ ...base, picturingLimitMs: Number.NaN } as unknown as RunPlanDeps),
+      /picturingLimitMs must be a number/,
+    );
+    assert.doesNotThrow(
+      () => validateRunPlanDeps({ ...base, picturingLimitMs: Infinity } as unknown as RunPlanDeps),
+    );
+    assert.doesNotThrow(
+      () => validateRunPlanDeps({ ...base, picturingLimitMs: 0 } as unknown as RunPlanDeps),
+    );
   });
 
   test("a bad startedAtMs fails fast", () => {
