@@ -192,6 +192,14 @@ export async function POST(req: Request): Promise<Response> {
   if (accessCode) {
     entitlement = await checkEntitlement(accessCode);
     if (!entitlement.allowed && entitlement.reason !== "off") {
+      // A denied code leaves a server-log trace (reason only, never the
+      // code): a tampered code, an exhausted pack, or a Stripe outage
+      // is otherwise invisible — the 402/503 alone says nothing about
+      // how often paid runs are refused. Same JSON-event shape as the
+      // pack-use log below.
+      console.log(
+        JSON.stringify({ event: "sightwork_entitlement_denied", reason: entitlement.reason }),
+      );
       return new Response(
         JSON.stringify({
           error:
