@@ -449,6 +449,24 @@ export async function POST(req: Request): Promise<Response> {
                 .join(", "),
           );
         }
+        // A failed run leaves a countable server-log trace (2026-11-13):
+        // the usage line above is plain text, so a run that dies
+        // mid-pipeline — billed or not — is otherwise invisible to a
+        // log counter. Same JSON-event shape as the refusal logs; step
+        // is the step the failed line below carries, cost is the spike
+        // total (0 when nothing billed). An abort is not a failure —
+        // the client went away and no failed line is pushed — so it
+        // logs no event.
+        if (!isAbort(err)) {
+          console.log(
+            JSON.stringify({
+              event: "sightwork_run_failed",
+              route: "plan",
+              step: err instanceof PlanStepError ? err.step : !wired ? "uploading" : "planning",
+              costUsd: tracker ? tracker.totals().spikeTotalUsd : 0,
+            }),
+          );
+        }
         // A failed run may already have billed calls (e.g. a billed
         // transcribe before a failed reason step): carry that total on
         // the failed line when it is positive, so the client keeps the
