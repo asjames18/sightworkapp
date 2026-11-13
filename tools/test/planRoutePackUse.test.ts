@@ -2,7 +2,9 @@
  * POST /api/plan pack tally (2026-11-13): a finished plan on a pack code
  * calls recordPackUse right after the done line; a sub code records
  * nothing, a failed tally still ships the plan, and billing off never
- * touches Stripe. Keyless, Stripe + Baseten + Meta all stubbed.
+ * touches Stripe. A pack with no plans left is 402 with reason "used-up"
+ * (2026-11-13), so the client can show the pack-used-up text.
+ * Keyless, Stripe + Baseten + Meta all stubbed.
  */
 import { test, describe } from "node:test";
 import assert from "node:assert/strict";
@@ -72,6 +74,8 @@ interface Run {
   lines: PlanJobStatus[];
   stripeGets: string[];
   stripePosts: { url: string; body: string }[];
+  status: number;
+  raw: string;
 }
 
 /**
@@ -83,6 +87,8 @@ async function run(opts: {
   env?: Record<string, string>;
   code?: string;
   recordPostStatus?: number;
+  /** Plans used on the pack customer (gate: used >= bought is used-up). */
+  used?: string;
 }): Promise<Run> {
   const saved = Object.fromEntries(ENV_VARS.map((k) => [k, process.env[k]]));
   for (const k of ENV_VARS) delete process.env[k];
@@ -134,7 +140,7 @@ async function run(opts: {
           { status: 200, headers: { "Content-Type": "application/json" } },
         );
       }
-      return new Response(JSON.stringify({ metadata: { sightwork_plans_used: "2" } }), {
+      return new Response(JSON.stringify({ metadata: { sightwork_plans_used: opts.used ?? "2" } }), {
         status: 200,
         headers: { "Content-Type": "application/json" },
       });
@@ -163,6 +169,8 @@ async function run(opts: {
       lines: text.split("\n").filter(Boolean).map((l) => JSON.parse(l) as PlanJobStatus),
       stripeGets,
       stripePosts,
+      status: res.status,
+      raw: text,
     };
   } finally {
     globalThis.fetch = realFetch;
@@ -223,5 +231,16 @@ describe("POST /api/plan pack tally (offline, stubbed Stripe + Baseten)", () => 
     assert.ok(!lines.some((l) => l.state === "failed"));
     assert.equal(stripeGets.length, 0);
     assert.equal(stripePosts.length, 0);
+  });
+
+  test("pack code with no plans left: 402 carries reason used-up", async () => {
+    // Gate: used 5, bought 5 (one paid pack5 session), so the run never starts.
+    const { status, raw, stripePosts } = await run({ env: BILLING_ENV, code: pack, used: "5" });
+    assert.equal(status, 402);
+    assert.equal(stripePosts.length, 0);
+    assert.deepEqual(JSON.parse(raw), {
+      error: "That access code isn't active.",
+      reason: "used-up",
+    });
   });
 });
