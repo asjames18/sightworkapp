@@ -39,8 +39,18 @@
  * billed model calls, so the client can keep the run-cost line
  * accurate; it is omitted when nothing billed or unknown.
  * Aborting the request stops the run.
+ *
+ * Access-code entitlement (2026-11-13): a request carrying
+ * x-sightwork-access-code is checked with Stripe before the body is
+ * read, so a dead code fails fast (402, or 503 when Stripe cannot
+ * be reached) without uploading frames; when billing is off the
+ * check is a no-op and the tester-code gate in proxy.ts stays the
+ * only gate. The check depends only on the header, never the body,
+ * so there is no reason it must sit after body validation — and
+ * sitting first keeps invalid-code probes out of the rate limiter.
  */
 
+import { checkEntitlement } from "../../../lib/billing/entitlement";
 import { createBasetenClient, createReasonBasetenCaller } from "../../../lib/meta/baseten";
 import {
   createCostSparkCaller,
@@ -164,6 +174,31 @@ export async function POST(req: Request): Promise<Response> {
   // include the body read and validation below, not just the
   // pipeline's own start.
   const handlerStartedAtMs = Date.now();
+  // Access-code entitlement, before the body is read (see the header
+  // note): when billing is off, checkEntitlement answers "off" and
+  // this is a no-op, so the request proceeds exactly as before. A
+  // failed check is a JSON error, like the other pre-stream errors
+  // (400/413/429); "unavailable" is a 503 because Stripe could not
+  // be reached, so the caller retries instead of reading the 402 as
+  // a dead code.
+  const accessCode = req.headers.get("x-sightwork-access-code");
+  if (accessCode) {
+    const entitlement = await checkEntitlement(accessCode);
+    if (!entitlement.allowed && entitlement.reason !== "off") {
+      return new Response(
+        JSON.stringify({
+          error:
+            entitlement.reason === "unavailable"
+              ? "We can't check your plan right now. Try again shortly."
+              : "That access code isn't active.",
+        }),
+        {
+          status: entitlement.reason === "unavailable" ? 503 : 402,
+          headers: { "Content-Type": "application/json" },
+        },
+      );
+    }
+  }
   let bodyText: string;
   try {
     bodyText = await req.text();
