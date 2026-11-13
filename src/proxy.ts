@@ -21,14 +21,17 @@ const BILLING_ROUTE = /^\/api\/billing\/[a-z-]{1,40}$/;
 
 const ACCESS_HEADER = "x-sightwork-access-code";
 
+/** Routes that check an access code themselves (signature and Stripe status) before reading the body. */
+const PAID_PATHS = new Set(["/api/plan", "/api/transcribe"]);
+
 /**
- * A paid-plan run carries an access code instead of the tester code. The plan route checks the
+ * A paid-plan run carries an access code instead of the tester code. The plan and transcribe routes check the
  * code's signature and its Stripe status before reading the body, so the proxy only lets it
  * through when billing is on; with billing off, codes mean nothing and the tester gate applies.
  */
 function paidRun(request: NextRequest): boolean {
   if (!billingEnabled(process.env.SIGHTWORK_BILLING)) return false;
-  if (request.method !== "POST" || request.nextUrl.pathname !== "/api/plan") return false;
+  if (request.method !== "POST" || !PAID_PATHS.has(request.nextUrl.pathname)) return false;
   const code = request.headers.get(ACCESS_HEADER)?.trim() ?? "";
   return code.startsWith("sw1.") && code.length <= MAX_ACCESS_CODE_LENGTH;
 }

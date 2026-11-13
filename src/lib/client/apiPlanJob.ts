@@ -209,18 +209,31 @@ export function withFailureCost(s: Extract<PlanJobStatus, { state: "failed" }>, 
   return total > 0 ? { ...rest, costUsd: total } : rest;
 }
 
-type TranscribeTry = { ok: true; answer: TranscribeAnswer } | { ok: false; unauthorized: boolean; costUsd: number };
+type TranscribeTry = { ok: true; answer: TranscribeAnswer } | { ok: false; unauthorized: boolean; refused?: boolean; costUsd: number };
+
+/** Who is asking: a tester code alone (string), or the tester and/or paid access code headers. */
+export type TranscribeAuth = string | { testCode?: string | null; accessCode?: string | null };
+
+function authHeaders(auth: TranscribeAuth): Record<string, string> {
+  if (typeof auth === "string") return { [TEST_CODE_HEADER]: auth };
+  return {
+    ...(auth.testCode ? { [TEST_CODE_HEADER]: auth.testCode } : {}),
+    ...(auth.accessCode ? { [ACCESS_CODE_HEADER]: auth.accessCode } : {}),
+  };
+}
 
 /** One POST /api/transcribe. Never throws: a dropped connection or an unreadable answer is { ok: false }. */
-async function postTranscribe(endpoint: string, wavBase64: string, spaceType: string | undefined, code: string, signal: AbortSignal): Promise<TranscribeTry> {
+async function postTranscribe(endpoint: string, wavBase64: string, spaceType: string | undefined, code: TranscribeAuth, signal: AbortSignal): Promise<TranscribeTry> {
   try {
     const res = await fetch(endpoint, {
       method: "POST",
-      headers: { "Content-Type": "application/json", [TEST_CODE_HEADER]: code },
+      headers: { "Content-Type": "application/json", ...authHeaders(code) },
       body: JSON.stringify(spaceType ? { audioWavBase64: wavBase64, spaceType } : { audioWavBase64: wavBase64 }),
       signal,
     });
     if (res.status === 401) return { ok: false, unauthorized: true, costUsd: 0 };
+    // A paid access code that isn't active: no point sending the plan request, it would be refused too.
+    if (res.status === 402) return { ok: false, unauthorized: false, refused: true, costUsd: 0 };
     // A billed transcribe call that then failed still cost something; keep it in the run's total.
     if (!res.ok) return { ok: false, unauthorized: false, costUsd: await logServerError(res, "transcribe") };
     const answer = parseTranscribeAnswer(await res.json());
@@ -236,14 +249,14 @@ async function postTranscribe(endpoint: string, wavBase64: string, spaceType: st
  * Narration longer than chunkMaxSec (long room-size takes) is cut into chunks at quiet points and sent
  * one chunk per request, then joined with each chunk's turn times shifted to take time (narrationChunks.ts);
  * a failed chunk is tried once more, and silent chunks aren't sent.
- * Returns the request to send, or "unauthorized" on 401. Any other failure keeps the original
+ * Returns the request to send, "unauthorized" on 401, or "refused" on 402 (an access code that isn't active). Any other failure keeps the original
  * WAV-carrying request, so narration is never silently dropped (same behavior as before the split),
  * along with what the failed transcribe requests cost when the server says so.
  */
 export async function splitNarration(
   body: PlanRequest,
   endpoint: string,
-  code: string,
+  code: TranscribeAuth,
   signal: AbortSignal,
   chunkMaxSec: number = NARRATION_CHUNK_MAX_SEC,
   /**
@@ -251,7 +264,7 @@ export async function splitNarration(
    * { at, of } before each chunk of a long narration (silent chunks are counted but not sent).
    */
   onSending?: (part?: { at: number; of: number }) => void,
-): Promise<{ body: PlanRequest; costUsd: number } | "unauthorized"> {
+): Promise<{ body: PlanRequest; costUsd: number } | "unauthorized" | "refused"> {
   const keep = { body, costUsd: 0 };
   if (!body.audioWavBase64 || body.transcript !== undefined) return keep;
   const withTranscript = (t: { transcript: string | null; transcriptTurns: TranscribeAnswer["transcriptTurns"] }, costUsd: number) => {
@@ -264,6 +277,7 @@ export async function splitNarration(
     onSending?.();
     const one = await postTranscribe(endpoint, body.audioWavBase64, body.spaceType, code, signal);
     if (one.ok) return withTranscript(one.answer, one.answer.costUsd);
+    if (one.refused) return "refused";
     return one.unauthorized ? "unauthorized" : { body, costUsd: one.costUsd };
   }
   let costUsd = 0;
@@ -281,6 +295,7 @@ export async function splitNarration(
       if (got.ok) break;
       costUsd += got.costUsd;
       if (got.unauthorized) return "unauthorized";
+      if (got.refused) return "refused";
     }
     if (!got || !got.ok) return { body, costUsd: Math.round(costUsd * 1e6) / 1e6 };
     costUsd += got.answer.costUsd;
@@ -364,16 +379,19 @@ export function createApiPlanJob(
     if (signal.aborted) return;
 
     // The split /api/transcribe request's cost (transcribeUsd above) is added to the plan's total when it comes back.
-    // The split transcribe request needs the tester code; with only an access code the narration rides in
-    // the plan request instead (the size check below still applies).
-    if (transcribeEndpoint && testCode) {
+    // The split transcribe request carries the same codes as the plan request (tester code, paid access code, or both).
+    if (transcribeEndpoint) {
       // The processing screen moves to "Listening" while the narration is read, with "part 2 of 4" on long takes.
-      const split = await splitNarration(body, transcribeEndpoint, testCode, signal, narrationChunkSec, (part) =>
+      const split = await splitNarration(body, transcribeEndpoint, { testCode, accessCode }, signal, narrationChunkSec, (part) =>
         report(part ? { state: "running", step: "listening", part } : { state: "running", step: "listening" }),
       );
       if (signal.aborted) return;
       if (split === "unauthorized") {
-        fail(WRONG_CODE_MESSAGE);
+        fail(testCode ? WRONG_CODE_MESSAGE : messageForStatus(401));
+        return;
+      }
+      if (split === "refused") {
+        fail(messageForStatus(402));
         return;
       }
       body = split.body;

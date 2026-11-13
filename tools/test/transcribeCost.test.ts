@@ -66,7 +66,7 @@ describe("failed transcribe request cost", () => {
       async () => {
         const out = await splitNarration(body, "/api/transcribe", "code", new AbortController().signal);
         assert.notEqual(out, "unauthorized");
-        if (out === "unauthorized") return;
+        if (typeof out === "string") return assert.fail(out);
         assert.equal(out.body, body);
         assert.equal(out.costUsd, 0.0021);
       },
@@ -79,7 +79,7 @@ describe("failed transcribe request cost", () => {
         () => new Response(text, { status: 500 }),
         async () => {
           const out = await splitNarration(body, "/api/transcribe", "code", new AbortController().signal);
-          if (out === "unauthorized") return assert.fail("unexpected 401");
+          if (typeof out === "string") return assert.fail(`unexpected ${out}`);
           assert.equal(out.body, body);
           assert.equal(out.costUsd, 0, text);
         },

@@ -60,17 +60,19 @@ async function run(status = 200): Promise<{ statuses: PlanJobStatus[]; seen: See
 const last = (s: PlanJobStatus[]) => s[s.length - 1];
 
 describe("server plan runs with an access code", () => {
-  test("an access code alone opens the run, rides in its own header, and skips the split transcribe call", async () => {
+  test("an access code alone opens the run and rides in its own header on the split transcribe call and the plan", async () => {
     fakeWindow();
     saveAccessCode(CODE);
     saveLocation({ city: "Sebring", state: "FL" });
     const { statuses, seen } = await run();
     assert.equal(last(statuses).state, "done");
-    assert.equal(seen.length, 1);
-    assert.equal(seen[0].url, "/api/plan");
+    assert.equal(seen[0].url, "/api/transcribe");
     assert.equal(seen[0].headers[ACCESS_CODE_HEADER], CODE);
     assert.equal(seen[0].headers[TEST_CODE_HEADER], undefined);
-    assert.equal(seen[0].body.audioWavBase64, "UklGRg==");
+    const plan = seen.find((s) => s.url === "/api/plan");
+    assert.ok(plan);
+    assert.equal(plan.headers[ACCESS_CODE_HEADER], CODE);
+    assert.equal(plan.headers[TEST_CODE_HEADER], undefined);
   });
   test("with both codes, both headers go and the narration still splits", async () => {
     fakeWindow();
@@ -88,9 +90,11 @@ describe("server plan runs with an access code", () => {
     fakeWindow();
     saveAccessCode(CODE);
     saveLocation({ city: "Sebring", state: "FL" });
-    const s = last((await run(402)).statuses);
+    const { statuses, seen } = await run(402);
+    const s = last(statuses);
     assert.ok(s.state === "failed");
     assert.equal(s.message, ACCESS_CODE_MESSAGE);
+    assert.deepEqual(seen.map((x) => x.url), ["/api/transcribe"], "a refused code stops before the plan request");
   });
   test("a 401 with only an access code asks for a tester code; with a tester code it says the code was refused", async () => {
     fakeWindow();
