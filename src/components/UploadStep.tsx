@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
-import { currentOwnVideoRunnerKind, needsTesterCode, pickRunnerKind, type RunnerKind } from "@/lib/client/selectRunner";
+import { currentOwnVideoRunnerKind, pickRunnerKind, type RunnerKind } from "@/lib/client/selectRunner";
 import { hasLastPlan } from "@/lib/client/lastPlan";
 import { EXAMPLES, type Example } from "@/lib/examples";
 import { loadTestCode, saveTestCode } from "@/lib/client/testCode";
@@ -23,6 +23,8 @@ import { keptTakeNote } from "@/lib/client/saveVideo";
 import { prefersShareSheet } from "@/lib/client/savePlanPdf";
 import { SaveVideoButton } from "./SaveVideoButton";
 import { SavedTakes } from "./SavedTakes";
+import { RunAccessChoice } from "./RunAccessChoice";
+import { codeFieldLabel, needsRunChoice } from "@/lib/client/runAccess";
 import type { SavedPlan } from "@/lib/client/lastPlan";
 
 /** Browsers leave `type` empty for some .mov files, so fall back to the extension. */
@@ -97,9 +99,14 @@ export function UploadStep({
   const [runner, setRunner] = useState<RunnerKind>("mock");
   // Where the user's own video goes: a real run, unless an example-plan preview was asked for on purpose.
   const [videoRunner, setVideoRunner] = useState<RunnerKind>("api");
+  // Nothing saved yet to pay for a server run (no own key, access code or tester code): the upload screen
+  // shows the two ways to make plans, and "Make my work plan" asks which one first (RunAccessChoice).
+  const [noWayToRun, setNoWayToRun] = useState(false);
   useEffect(() => {
     setRunner(pickRunnerKind(window.location.search, process.env.NEXT_PUBLIC_SIGHTWORK_RUNNER));
-    setVideoRunner(currentOwnVideoRunnerKind());
+    const kind = currentOwnVideoRunnerKind();
+    setVideoRunner(kind);
+    setNoWayToRun(needsRunChoice(kind, loadTestCode() || loadAccessCode()));
   }, []);
   // The tester-code prompt on the video card: shown when a real run is asked for without a saved code.
   const [askCode, setAskCode] = useState(false);
@@ -127,7 +134,7 @@ export function UploadStep({
   };
   const send = (file: File) => {
     if (videoRunner === "api" && !locationReady()) return;
-    if (needsTesterCode(videoRunner, loadTestCode() || loadAccessCode())) setAskCode(true);
+    if (needsRunChoice(videoRunner, loadTestCode() || loadAccessCode())) setAskCode(true);
     else onVideo(file, videoRunner);
   };
   useEffect(() => () => { if (preview) URL.revokeObjectURL(preview.url); }, [preview]);
@@ -287,7 +294,19 @@ export function UploadStep({
 
       {!preview ? (
         <>
-          {recording ? (
+          {noWayToRun && !recording ? (
+            // Gate before filming: no own key, access code or tester code saved yet. Recording and choosing a
+            // video wait until one is; the example plans further down stay free.
+            <RunAccessChoice
+              where="start"
+              onKeySaved={() => {
+                setNoWayToRun(false);
+                setVideoRunner(currentOwnVideoRunnerKind());
+              }}
+              onStoredCode={() => setNoWayToRun(false)}
+              codeField={<TesterCode submitLabel="Save code" onSaved={() => setNoWayToRun(false)} />}
+            />
+          ) : recording ? (
             <CameraRecorder
               rules={rules}
               onRecorded={(file, info) => pick(file, info)}
@@ -359,7 +378,7 @@ export function UploadStep({
           ) : null}
           {recent}
           <SavedTakes onUse={(file) => pick(file)} onOpenPlan={onOpenPlan} roomSize={roomSize} />
-          {runner === "api" && <TesterCode />}
+          {runner === "api" && !noWayToRun && <TesterCode />}
           <FilmingTips aim={aimRangeSpoken(rules)} label={rules.label} />
           <ExamplePicker onPick={onExample} />
         </>
@@ -476,19 +495,33 @@ export function UploadStep({
                 : "Preview build: your video stays on this device and an example plan is shown."}
             </p>
             {askCode && (
-              <div role="alert" className="mt-3 rounded-xl bg-amber-50 p-3 text-amber-950">
-                <p className="text-sm font-semibold">Enter the tester code to make a plan from this video.</p>
-                <p className="mt-0.5 text-sm">Your video is kept here, and the plan runs on it as soon as the code is saved.</p>
-                <TesterCode
-                  autoFocus
-                  submitLabel="Save and make my plan"
-                  onSaved={() => {
-                    if (!locationReady()) return;
-                    setAskCode(false);
-                    onVideo(preview.file, "api");
-                  }}
-                />
-              </div>
+              <RunAccessChoice
+                onKeySaved={() => {
+                  // The key is saved in this browser: this video now runs on it, from here, not on the server.
+                  setAskCode(false);
+                  setNoWayToRun(false);
+                  const kind = currentOwnVideoRunnerKind();
+                  setVideoRunner(kind);
+                  onVideo(preview.file, kind);
+                }}
+                onStoredCode={() => {
+                  if (!locationReady()) return;
+                  setAskCode(false);
+                  setNoWayToRun(false);
+                  onVideo(preview.file, "api");
+                }}
+                codeField={
+                  <TesterCode
+                    submitLabel="Save and make my plan"
+                    onSaved={() => {
+                      if (!locationReady()) return;
+                      setAskCode(false);
+                      setNoWayToRun(false);
+                      onVideo(preview.file, "api");
+                    }}
+                  />
+                }
+              />
             )}
           </div>
         </div>
@@ -730,7 +763,7 @@ function TesterCode({
       }}
     >
       <label htmlFor={onSaved ? "tester-code-run" : "tester-code"} className="block text-sm font-semibold">
-        Tester code for real runs
+        {codeFieldLabel()}
       </label>
       <div className="mt-2 flex gap-2">
         <input
@@ -750,7 +783,11 @@ function TesterCode({
         </button>
       </div>
       <p aria-live="polite" className="mt-1 text-xs text-ink/70">
-        {saved ? "Saved on this device." : "Real runs use paid model credits, so they need a code."}
+        {saved
+          ? "Saved on this device."
+          : codeFieldLabel() === "Access code"
+            ? "From the page after checkout or your receipt email. It starts with sw1."
+            : "Real runs use paid model credits, so they need a code."}
       </p>
     </form>
   );
