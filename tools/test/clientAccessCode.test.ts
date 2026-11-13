@@ -2,7 +2,7 @@
 import { test, describe, afterEach } from "node:test";
 import assert from "node:assert/strict";
 import { ACCESS_CODE_HEADER, loadAccessCode, looksLikeAccessCode, saveAccessCode } from "@/lib/client/accessCode";
-import { ACCESS_CODE_MESSAGE, createApiPlanJob, PAID_PLAN_MESSAGE, TESTER_CODE_MESSAGE, WRONG_CODE_MESSAGE } from "@/lib/client/apiPlanJob";
+import { ACCESS_CODE_MESSAGE, createApiPlanJob, PAID_PLAN_MESSAGE, TESTER_CODE_MESSAGE, USED_UP_MESSAGE, WRONG_CODE_MESSAGE } from "@/lib/client/apiPlanJob";
 import { saveLocation } from "@/lib/client/location";
 import { saveTestCode, TEST_CODE_HEADER } from "@/lib/client/testCode";
 import type { PlanJobStatus, PlanRequest } from "@/lib/types";
@@ -33,12 +33,12 @@ describe("access code storage", () => {
 
 type Seen = { url: string; headers: Record<string, string>; body: PlanRequest };
 
-async function run(status = 200): Promise<{ statuses: PlanJobStatus[]; seen: Seen[] }> {
+async function run(status = 200, failBody: unknown = { error: "x" }, audio = true): Promise<{ statuses: PlanJobStatus[]; seen: Seen[] }> {
   const realFetch = globalThis.fetch;
   const seen: Seen[] = [];
   globalThis.fetch = (async (url: string, init: RequestInit) => {
     seen.push({ url, headers: init.headers as Record<string, string>, body: JSON.parse(String(init.body)) });
-    if (status !== 200) return new Response(JSON.stringify({ error: "x" }), { status });
+    if (status !== 200) return new Response(JSON.stringify(failBody), { status });
     return new Response(JSON.stringify({ state: "done", plan: { spaceName: "Stage", issues: [], steps: [], materials: [], inventory: [] } }) + "\n", {
       status: 200,
       headers: { "Content-Type": "application/x-ndjson" },
@@ -48,7 +48,7 @@ async function run(status = 200): Promise<{ statuses: PlanJobStatus[]; seen: See
   const err = console.error;
   console.error = () => {};
   try {
-    const req: PlanRequest = { durationSec: 30, frames: [{ tSec: 0, dataUrl: "data:image/jpeg;base64,AA==" }], audioWavBase64: "UklGRg==" };
+    const req: PlanRequest = { durationSec: 30, frames: [{ tSec: 0, dataUrl: "data:image/jpeg;base64,AA==" }], ...(audio ? { audioWavBase64: "UklGRg==" } : {}) };
     await createApiPlanJob(async () => req)({ file: {} as File, onStatus: (s) => statuses.push(s), signal: new AbortController().signal });
   } finally {
     globalThis.fetch = realFetch;
@@ -95,6 +95,33 @@ describe("server plan runs with an access code", () => {
     assert.ok(s.state === "failed");
     assert.equal(s.message, ACCESS_CODE_MESSAGE);
     assert.deepEqual(seen.map((x) => x.url), ["/api/transcribe"], "a refused code stops before the plan request");
+  });
+  test("a used-up pack (402, reason used-up) says so on the narration call and on the plan call", async () => {
+    fakeWindow();
+    saveAccessCode(CODE);
+    saveLocation({ city: "Sebring", state: "FL" });
+    const a = await run(402, { error: "x", reason: "used-up" });
+    const sa = last(a.statuses);
+    assert.ok(sa.state === "failed");
+    assert.equal(sa.message, USED_UP_MESSAGE);
+    assert.deepEqual(a.seen.map((x) => x.url), ["/api/transcribe"]);
+    const b = await run(402, { error: "x", reason: "used-up" }, false);
+    const sb = last(b.statuses);
+    assert.ok(sb.state === "failed");
+    assert.equal(sb.message, USED_UP_MESSAGE);
+    assert.deepEqual(b.seen.map((x) => x.url), ["/api/plan"]);
+    const c = await run(402, { error: "x", reason: "inactive" }, false);
+    const sc = last(c.statuses);
+    assert.ok(sc.state === "failed");
+    assert.equal(sc.message, ACCESS_CODE_MESSAGE, "any other reason keeps the inactive-code text");
+  });
+  test("used-up with no access code sent still points to a paid plan", async () => {
+    fakeWindow();
+    saveTestCode("tester");
+    saveLocation({ city: "Sebring", state: "FL" });
+    const s = last((await run(402, { error: "x", reason: "used-up" }, false)).statuses);
+    assert.ok(s.state === "failed");
+    assert.equal(s.message, PAID_PLAN_MESSAGE);
   });
   test("a 401 with only an access code asks for a tester code; with a tester code it says the code was refused", async () => {
     fakeWindow();

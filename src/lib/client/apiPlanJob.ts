@@ -115,6 +115,20 @@ export function isResumeFailure(message: string): boolean {
 export const ACCESS_CODE_MESSAGE =
   "Your access code isn't active. Check your plan on the pricing page, or open the example plan.";
 
+/** A plan pack code whose plans are all used: the server's 402 says reason "used-up". */
+export const USED_UP_MESSAGE =
+  "This plan pack is used up. Buy more plans on the pricing page, add your own key in Settings, or open the example plan.";
+
+/** True when a refusal (402) body says the pack is used up. Reads a clone, so the original body stays unread. */
+async function isUsedUp(res: Response): Promise<boolean> {
+  try {
+    const v: unknown = await res.clone().json();
+    return !!v && typeof v === "object" && (v as { reason?: unknown }).reason === "used-up";
+  } catch {
+    return false;
+  }
+}
+
 /** A 402 with no access code sent: billing is on, so a tester code alone no longer opens a real run. */
 export const PAID_PLAN_MESSAGE =
   "Real runs need a paid plan. Get one on the pricing page, add your own key in Settings, or open the example plan.";
@@ -213,7 +227,7 @@ export function withFailureCost(s: Extract<PlanJobStatus, { state: "failed" }>, 
   return total > 0 ? { ...rest, costUsd: total } : rest;
 }
 
-type TranscribeTry = { ok: true; answer: TranscribeAnswer } | { ok: false; unauthorized: boolean; refused?: boolean; costUsd: number };
+type TranscribeTry = { ok: true; answer: TranscribeAnswer } | { ok: false; unauthorized: boolean; refused?: "inactive" | "used-up"; costUsd: number };
 
 /** Who is asking: a tester code alone (string), or the tester and/or paid access code headers. */
 export type TranscribeAuth = string | { testCode?: string | null; accessCode?: string | null };
@@ -237,7 +251,7 @@ async function postTranscribe(endpoint: string, wavBase64: string, spaceType: st
     });
     if (res.status === 401) return { ok: false, unauthorized: true, costUsd: 0 };
     // A paid access code that isn't active: no point sending the plan request, it would be refused too.
-    if (res.status === 402) return { ok: false, unauthorized: false, refused: true, costUsd: 0 };
+    if (res.status === 402) return { ok: false, unauthorized: false, refused: (await isUsedUp(res)) ? "used-up" : "inactive", costUsd: 0 };
     // A billed transcribe call that then failed still cost something; keep it in the run's total.
     if (!res.ok) return { ok: false, unauthorized: false, costUsd: await logServerError(res, "transcribe") };
     const answer = parseTranscribeAnswer(await res.json());
@@ -253,7 +267,7 @@ async function postTranscribe(endpoint: string, wavBase64: string, spaceType: st
  * Narration longer than chunkMaxSec (long room-size takes) is cut into chunks at quiet points and sent
  * one chunk per request, then joined with each chunk's turn times shifted to take time (narrationChunks.ts);
  * a failed chunk is tried once more, and silent chunks aren't sent.
- * Returns the request to send, "unauthorized" on 401, or "refused" on 402 (an access code that isn't active). Any other failure keeps the original
+ * Returns the request to send, "unauthorized" on 401, or "refused" / "used-up" on 402 (an access code that isn't active, or a pack with no plans left). Any other failure keeps the original
  * WAV-carrying request, so narration is never silently dropped (same behavior as before the split),
  * along with what the failed transcribe requests cost when the server says so.
  */
@@ -268,7 +282,7 @@ export async function splitNarration(
    * { at, of } before each chunk of a long narration (silent chunks are counted but not sent).
    */
   onSending?: (part?: { at: number; of: number }) => void,
-): Promise<{ body: PlanRequest; costUsd: number } | "unauthorized" | "refused"> {
+): Promise<{ body: PlanRequest; costUsd: number } | "unauthorized" | "refused" | "used-up"> {
   const keep = { body, costUsd: 0 };
   if (!body.audioWavBase64 || body.transcript !== undefined) return keep;
   const withTranscript = (t: { transcript: string | null; transcriptTurns: TranscribeAnswer["transcriptTurns"] }, costUsd: number) => {
@@ -281,7 +295,7 @@ export async function splitNarration(
     onSending?.();
     const one = await postTranscribe(endpoint, body.audioWavBase64, body.spaceType, code, signal);
     if (one.ok) return withTranscript(one.answer, one.answer.costUsd);
-    if (one.refused) return "refused";
+    if (one.refused) return one.refused === "used-up" ? "used-up" : "refused";
     return one.unauthorized ? "unauthorized" : { body, costUsd: one.costUsd };
   }
   let costUsd = 0;
@@ -299,7 +313,7 @@ export async function splitNarration(
       if (got.ok) break;
       costUsd += got.costUsd;
       if (got.unauthorized) return "unauthorized";
-      if (got.refused) return "refused";
+      if (got.refused) return got.refused === "used-up" ? "used-up" : "refused";
     }
     if (!got || !got.ok) return { body, costUsd: Math.round(costUsd * 1e6) / 1e6 };
     costUsd += got.answer.costUsd;
@@ -394,6 +408,10 @@ export function createApiPlanJob(
         fail(testCode ? WRONG_CODE_MESSAGE : messageForStatus(401));
         return;
       }
+      if (split === "used-up") {
+        fail(USED_UP_MESSAGE);
+        return;
+      }
       if (split === "refused") {
         fail(accessCode ? messageForStatus(402) : PAID_PLAN_MESSAGE);
         return;
@@ -426,6 +444,7 @@ export function createApiPlanJob(
       return;
     }
     if (!res.ok || !res.body) {
+      const usedUp = res.status === 402 && !!accessCode && (await isUsedUp(res));
       if (!res.ok) await logServerError(res);
       // A tester code was sent, so a 401 means the server refused it; with only an access code, a 401 means
       // the server isn't taking paid runs, and the tester-code prompt is the way in.
@@ -436,7 +455,9 @@ export function createApiPlanJob(
             ? WRONG_CODE_MESSAGE
             : res.status === 402 && !accessCode
               ? PAID_PLAN_MESSAGE
-              : messageForStatus(res.status),
+              : usedUp
+                ? USED_UP_MESSAGE
+                : messageForStatus(res.status),
       );
       return;
     }
