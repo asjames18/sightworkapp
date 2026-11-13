@@ -58,8 +58,19 @@ export function brevoSender(env: Record<string, string | undefined>, fetchImpl: 
       headers: { "api-key": key, "Content-Type": "application/json", Accept: "application/json" },
       body: JSON.stringify({ sender, to: [{ email: m.to }], subject: m.subject, textContent: m.text }),
     });
-    if (!res.ok) throw new Error(`mail service answered ${res.status}`);
+    // Brevo's error body names the cause ("unauthorized", "invalid_parameter"...): keep its short code for the
+    // log, never the message text, which can echo the address.
+    if (!res.ok) throw new Error(`mail service answered ${res.status}${await brevoErrorCode(res)}`);
   };
+}
+
+async function brevoErrorCode(res: Response): Promise<string> {
+  try {
+    const v = (await res.json()) as { code?: unknown };
+    return typeof v?.code === "string" && /^[a-z_]{1,40}$/.test(v.code) ? ` (${v.code})` : "";
+  } catch {
+    return "";
+  }
 }
 
 /** The mail sender for this server: Brevo when it's set up, else Resend, else null (recovery answers 503). */
@@ -90,7 +101,17 @@ export async function handleBillingRecover(
       if (!res.ok) throw new Error(`Stripe answered ${res.status}`);
       return (await res.json()) as { data?: unknown };
     };
-    const customers = ((await get(`/customers?${new URLSearchParams({ email, limit: "3" })}`)).data ?? []) as { id?: unknown; email?: unknown }[];
+    // Stripe's email filter is case-sensitive and Checkout keeps the address as typed, so look up the
+    // lower-case form and, when it differs, the form typed here too.
+    type Cus = { id?: unknown; email?: unknown };
+    const typed = typeof raw === "string" ? raw.trim() : "";
+    const forms = typed && typed !== email ? [email, typed] : [email];
+    const customers: Cus[] = [];
+    for (const form of forms) {
+      for (const c of ((await get(`/customers?${new URLSearchParams({ email: form, limit: "3" })}`)).data ?? []) as Cus[]) {
+        if (!customers.some((k) => idOf(k) === idOf(c))) customers.push(c);
+      }
+    }
     const issuedAt = Math.floor((ctx.now ?? Date.now)() / 1000);
     const lines: string[] = [];
     const seen = new Set<string>();
@@ -112,6 +133,8 @@ export async function handleBillingRecover(
         lines.push(`${plan.name}\n${issueAccessCode(grant, secret)}`);
       }
     }
+    // One line per lookup, with counts only (no address, no code), so a "no email came" report can be traced.
+    console.log(JSON.stringify({ event: "sightwork_billing_recover", customers: customers.length, codes: lines.length, sending: lines.length > 0 }));
     if (lines.length > 0) {
       await send({
         to: email,
