@@ -103,8 +103,8 @@ export function transcribeBodyTooLarge(bodyText: string): boolean {
 
 const JSON_HEADERS = { "Content-Type": "application/json" };
 
-function errorResponse(message: string, status: number): Response {
-  return new Response(JSON.stringify({ error: message }), {
+function errorResponse(message: string, status: number, extra?: Record<string, unknown>): Response {
+  return new Response(JSON.stringify({ error: message, ...extra }), {
     status,
     headers: JSON_HEADERS,
   });
@@ -127,6 +127,9 @@ export async function POST(req: Request): Promise<Response> {
           ? "We can't check your plan right now. Try again shortly."
           : "That access code isn't active.",
         entitlement.reason === "unavailable" ? 503 : 402,
+        // The client maps reason "used-up" to the pack-used-up text on
+        // screen (2026-11-13); any other 402 keeps the inactive-code text.
+        entitlement.reason === "used-up" ? { reason: "used-up" } : undefined,
       );
     }
   }
