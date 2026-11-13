@@ -270,6 +270,20 @@ export async function POST(req: Request): Promise<Response> {
 
   const problems = validatePlanRequest(parsed);
   if (problems.length > 0) {
+    // An invalid request leaves a server-log trace in the same
+    // JSON-event shape as the entitlement denials, the rate-limit
+    // refusals, the body-too-large refusals and the unreadable-body
+    // refusals (2026-11-13): validation was the last refusal path
+    // whose only trace was a plain-text console.error instead of a
+    // countable event. Count only, never the request content. The
+    // console.error detail stays for diagnosis.
+    console.log(
+      JSON.stringify({
+        event: "sightwork_invalid_request",
+        route: "plan",
+        problems: problems.length,
+      }),
+    );
     console.error(`plan route: invalid request: ${problems.join("; ")}`);
     return failedLine("uploading", "That plan request was incomplete. Try again.");
   }
