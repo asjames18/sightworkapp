@@ -106,9 +106,9 @@ export function isTesterCodeFailure(message: string): boolean {
  */
 export const LOCATION_REQUIRED_MESSAGE = "Add the city and state where this space is to make a plan from this video.";
 
-/** True when the flow should go back to the video card with the same video (tester code or city/state). */
+/** True when the flow should go back to the video card with the same video (a code, a way to pay, or city/state). */
 export function isResumeFailure(message: string): boolean {
-  return isTesterCodeFailure(message) || message === LOCATION_REQUIRED_MESSAGE;
+  return isTesterCodeFailure(message) || isPaidRefusal(message) || message === LOCATION_REQUIRED_MESSAGE;
 }
 
 /** A paid access code the server refused (used up, canceled or changed). Not a tester-code failure. */
@@ -505,4 +505,12 @@ export function createApiPlanJob(
 
     if (!finished && !signal.aborted) failCut();
   };
+}
+
+/**
+ * True for a run the server refused for payment (402): no paid plan, an access code that isn't active, or a
+ * used-up pack. The failure screen then links Pricing and the own-key Settings and offers the run choice again.
+ */
+export function isPaidRefusal(message: string): boolean {
+  return message === PAID_PLAN_MESSAGE || message === ACCESS_CODE_MESSAGE || message === USED_UP_MESSAGE;
 }

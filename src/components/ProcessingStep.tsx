@@ -1,3 +1,5 @@
+import Link from "next/link";
+import { runOptions } from "@/lib/client/runAccess";
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import type { RunStep, StepCheck } from "@/lib/types";
 import { currentStepEngines, OPTIONAL_STEPS, planningNowLine, REVIEW_ONLY_STEPS, type ScreenStep } from "@/lib/client/engines";
@@ -63,6 +65,7 @@ export function ProcessingStep({
   onStop,
   onEnterCode,
   enterCodeLabel = "Enter tester code",
+  paidRefusal = false,
   engines,
   skipped,
   checks,
@@ -86,6 +89,8 @@ export function ProcessingStep({
   onEnterCode?: () => void;
   /** Label for the onEnterCode button ("Add city and state" when the run was stopped for the location). */
   enterCodeLabel?: string;
+  /** The server refused the run for payment (402): link Pricing and the own-key Settings under the message. */
+  paidRefusal?: boolean;
   /** Engine named under each step. Defaults to this page's plan provider (see src/lib/client/engines.ts). */
   engines?: Record<ScreenStep, string>;
   /** Optional steps the server skipped this run (e.g. Meta access off). Shown as skipped, not done. */
@@ -274,6 +279,7 @@ export function ProcessingStep({
         <div role="alert" className="mt-6 rounded-2xl border border-red-600/30 bg-white p-4">
           <p className="font-semibold text-red-700">Stopped at: {LABELS[steps[current]] ?? "a step"}</p>
           <p className="mt-1 text-sm text-ink/70">{failure.message}</p>
+          {paidRefusal && <PaidRefusalLinks />}
           {offline && (
             <p data-testid="offline-note" className="mt-1 text-sm font-medium text-amber-900">
               {offline}
@@ -500,4 +506,23 @@ function useOnline(): boolean {
     };
   }, []);
   return online;
+}
+
+/** Under a payment refusal: the two ways to keep going, as links (the button above reopens the choice on the video). */
+function PaidRefusalLinks() {
+  const options = runOptions();
+  if (options.length === 0) return null;
+  return (
+    <p className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm" data-testid="paid-refusal-links">
+      {options.map((o) => (
+        <Link
+          key={o.key}
+          href={o.href}
+          className="inline-flex min-h-11 items-center font-semibold text-accent-dark underline underline-offset-2 hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+        >
+          {o.label}
+        </Link>
+      ))}
+    </p>
+  );
 }
