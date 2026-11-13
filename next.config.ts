@@ -12,6 +12,11 @@ const csp = buildCsp({
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
+  // The app and pages link to /pricing only when it exists: SIGHTWORK_BILLING is server only, so its on/off
+  // (never a secret) is copied into a public build-time flag (src/lib/client/runAccess.ts).
+  env: {
+    NEXT_PUBLIC_SIGHTWORK_PAID_PLANS: process.env.SIGHTWORK_BILLING === "on" ? "on" : "off",
+  },
   poweredByHeader: false,
   // `/start?view=example[&ex=<id>]` is served from the prerendered /start/example/<id> page (the URL in the
   // address bar doesn't change), so the example plan is in the first HTML: no upload-screen flash, no layout

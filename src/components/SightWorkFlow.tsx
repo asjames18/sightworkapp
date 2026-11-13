@@ -5,7 +5,7 @@ import Link from "next/link";
 import { RUN_STEPS, type PlanStep, type WorkPlan } from "@/lib/types";
 import { EXAMPLES, findExample, type Example } from "@/lib/examples";
 import { planJobFor, type RunnerKind } from "@/lib/client/selectRunner";
-import { isResumeFailure, isTesterCodeFailure, isTimeLimitFailure } from "@/lib/client/apiPlanJob";
+import { isPaidRefusal, isResumeFailure, isTesterCodeFailure, isTimeLimitFailure } from "@/lib/client/apiPlanJob";
 import { loadRegion } from "@/lib/client/location";
 import { usePlanJob } from "@/lib/client/usePlanJob";
 import { loadLastPlanAsync, saveLastPlan } from "@/lib/client/lastPlan";
@@ -13,6 +13,7 @@ import { addRecentPlan } from "@/lib/client/recentPlans";
 import { buzzPlanReady, cuePlanReady } from "@/lib/client/planReadyCue";
 import { showPlanTitle } from "@/lib/client/planTitle";
 import { RecentPlans } from "./RecentPlans";
+import { AccessNavLinks } from "./AccessLinks";
 import { UploadStep } from "./UploadStep";
 import { ProcessingStep } from "./ProcessingStep";
 import { PlanView } from "./PlanView";
@@ -166,10 +167,13 @@ export function SightWorkFlow({ initialExampleId }: { initialExampleId?: string 
             )}
           </div>
           <div className="flex flex-wrap items-center justify-end gap-2">
+            {/* Pricing and the own-key Settings, so a new visitor sees both ways to make plans. The plan header
+                already holds Save PDF and New walkthrough, so there they give way (one row keeps the section chips clear). */}
+            {stage.kind !== "plan" && <AccessNavLinks />}
             {/* Back to the landing's explainer. On phones the plan header already holds Save PDF and New, so it waits for sm there. */}
             <Link
               href="/#how-heading"
-              className={`${stage.kind === "plan" ? "hidden sm:inline-flex" : "inline-flex"} min-h-11 items-center rounded-lg px-2 text-sm font-medium text-ink/70 underline-offset-4 hover:text-ink hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent`}
+              className={`hidden sm:inline-flex min-h-11 items-center rounded-lg px-2 text-sm font-medium text-ink/70 underline-offset-4 hover:text-ink hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent`}
             >
               How it works
             </Link>
@@ -216,7 +220,16 @@ export function SightWorkFlow({ initialExampleId }: { initialExampleId?: string 
               ? () => setStage({ kind: "upload", resume: stage.file })
               : undefined
           }
-          enterCodeLabel={job?.state === "failed" && !isTesterCodeFailure(job.message) ? "Add city and state" : undefined}
+          enterCodeLabel={
+            job?.state === "failed"
+              ? isPaidRefusal(job.message)
+                ? "Use your own key or buy plans"
+                : !isTesterCodeFailure(job.message)
+                  ? "Add city and state"
+                  : undefined
+              : undefined
+          }
+          paidRefusal={job?.state === "failed" && isPaidRefusal(job.message)}
           onExample={() => showExample()}
           onStop={() => setStage({ kind: "upload", stopped: stage.file })}
           skipped={skipped}

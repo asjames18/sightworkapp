@@ -1,6 +1,9 @@
 import Image from "next/image";
 import Link from "next/link";
 import { LastPlanLink } from "./LastPlanLink";
+import { AccessNavLinks } from "../AccessLinks";
+import { byokEnabled } from "@/lib/client/byokKey";
+import { paidPlansOn, PRICING_HREF, SETTINGS_HREF } from "@/lib/client/runAccess";
 
 const ring = "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent";
 const primary = `inline-flex min-h-[44px] items-center justify-center rounded-xl bg-accent-dark px-6 py-3 text-base font-semibold text-white hover:bg-ink ${ring}`;
@@ -75,6 +78,30 @@ const secondary = `inline-flex min-h-[44px] items-center justify-center rounded-
  * the said-vs-saw band, what you get, who it's for, built on Meta's models, fine print,
  * closing CTA and footer.
  */
+const heroLink = `font-semibold text-accent-dark underline underline-offset-2 hover:text-ink ${ring}`;
+
+/** Under the hero buttons: the two ways to make plans from your own video, each a link. */
+function HeroAccessLine() {
+  const paid = paidPlansOn();
+  const byok = byokEnabled();
+  if (!paid && !byok) return null;
+  return (
+    <p className="mt-5 max-w-2xl text-base text-ink/80" data-testid="hero-access">
+      {byok && (
+        <>
+          <Link href={SETTINGS_HREF} className={heroLink}>Free with your own Meta API key</Link>
+          {paid ? ", or " : "."}
+        </>
+      )}
+      {paid && (
+        <>
+          <Link href={PRICING_HREF} className={heroLink}>{byok ? "buy plans" : "Buy plans"}</Link> from $9, no key needed.
+        </>
+      )}
+    </p>
+  );
+}
+
 export function Landing() {
   return (
     <>
@@ -83,9 +110,12 @@ export function Landing() {
           <a href="#top" className={`-mx-2 flex min-h-11 items-center rounded-lg px-2 text-xl font-extrabold tracking-tight ${ring}`}>
             Sight<span className="text-accent">Work</span>
           </a>
-          <Link href="/start" className={`min-h-11 rounded-full border border-ink/20 bg-white/60 px-4 py-2.5 text-sm font-semibold hover:border-ink/40 ${ring}`}>
-            Try it
-          </Link>
+          <div className="flex items-center gap-1 sm:gap-2">
+            <AccessNavLinks />
+            <Link href="/start" className={`min-h-11 rounded-full border border-ink/20 bg-white/60 px-4 py-2.5 text-sm font-semibold hover:border-ink/40 ${ring}`}>
+              Try it
+            </Link>
+          </div>
         </div>
       </header>
 
@@ -105,6 +135,7 @@ export function Landing() {
             <Link href="/start?view=example&ex=sanctuary" className={secondary}>See a real run</Link>
           </div>
           <LastPlanLink />
+          <HeroAccessLine />
           <p className="mt-4 text-sm text-ink/70">Open source. No account needed to try an example plan.</p>
           </div>
           <RealRunHero />
