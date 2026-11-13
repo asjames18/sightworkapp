@@ -72,3 +72,37 @@ test("billing routes skip the tester gate; look-alike paths and other routes sta
     assert.equal(at(path).status, 401, path);
   }
 });
+
+test("access-code runs skip the tester gate only when billing is on", () => {
+  const BILL = "SIGHTWORK_BILLING";
+  const savedBill = process.env[BILL];
+  process.env[ENV] = "right-code";
+  const paid = (code: string, opts: { method?: string; path?: string } = {}) =>
+    quiet(() =>
+      proxy(
+        new NextRequest(`http://localhost${opts.path ?? "/api/plan"}`, {
+          method: opts.method ?? "POST",
+          headers: { "x-sightwork-access-code": code },
+        }),
+      ),
+    );
+  try {
+    delete process.env[BILL];
+    assert.equal(paid("sw1.a.b").status, 401, "billing off: a code is not a pass");
+    process.env[BILL] = "yes";
+    assert.equal(paid("sw1.a.b").status, 401, "only the exact on value counts");
+    process.env[BILL] = "on";
+    assert.equal(paid("sw1.a.b").status, 200);
+    assert.equal(paid("  sw1.a.b ").status, 200);
+    assert.equal(paid("").status, 401);
+    assert.equal(paid("garbage").status, 401);
+    assert.equal(paid("sw1." + "a".repeat(600)).status, 401);
+    assert.equal(paid("sw1.a.b", { method: "GET" }).status, 401);
+    assert.equal(paid("sw1.a.b", { path: "/api/other" }).status, 401);
+    delete process.env[ENV];
+    assert.equal(paid("sw1.a.b").status, 200, "works with no tester code on the server");
+  } finally {
+    if (savedBill === undefined) delete process.env[BILL];
+    else process.env[BILL] = savedBill;
+  }
+});
