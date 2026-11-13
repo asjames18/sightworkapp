@@ -126,8 +126,8 @@ async function run(
 const emptyBody = JSON.stringify({ audioWavBase64: "" });
 const wavBody = JSON.stringify({ audioWavBase64: wav() });
 
-/** Stripe answers for a pack customer with used=2 and one paid pack5 session (bought=5). */
-function packStripe(): StripeStub {
+/** Stripe answers for a pack customer with `used` plans used and one paid pack5 session (bought=5). */
+function packStripe(used = "2"): StripeStub {
   return async (url: string) => {
     if (url.includes("/checkout/sessions")) {
       return {
@@ -139,7 +139,7 @@ function packStripe(): StripeStub {
         }),
       };
     }
-    return { ok: true, status: 200, json: async () => ({ metadata: { sightwork_plans_used: "2" } }) };
+    return { ok: true, status: 200, json: async () => ({ metadata: { sightwork_plans_used: used } }) };
   };
 }
 
@@ -218,4 +218,17 @@ test("billing on: a pack code transcribes and records nothing here", async () =>
   assert.equal(status, 200);
   assert.equal(json.transcript, "[0.0] hello there");
   assert.equal(json.costUsd, 0.0021);
+});
+
+test("billing on: a used-up pack is 402 with reason used-up", async () => {
+  const { status, json, stripeCalls, stripePosts } = await run(emptyBody, {
+    env: BILLING_ENV,
+    code: pack,
+    fetchImpl: packStripe("5"),
+  });
+  // Gate only: customer GET + sessions list. No ASR call, no tally POST.
+  assert.equal(stripeCalls, 2);
+  assert.equal(stripePosts, 0);
+  assert.equal(status, 402);
+  assert.deepEqual(json, { error: "That access code isn't active.", reason: "used-up" });
 });
