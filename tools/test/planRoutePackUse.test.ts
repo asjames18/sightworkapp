@@ -1,12 +1,14 @@
 /**
  * POST /api/plan pack tally (2026-11-13): a finished plan on a pack code
- * calls recordPackUse right after the done line; a sub code records
- * nothing, a failed tally still ships the plan, and billing off never
- * touches Stripe. A pack with no plans left is 402 with reason "used-up"
+ * calls recordPackUse right after the done line; a sub code logs its use
+ * (sightwork_sub_use, no Stripe write), a failed tally still ships the plan,
+ * and billing off never touches Stripe. A pack with no plans left is 402 with reason "used-up"
  * (2026-11-13), so the client can show the pack-used-up text. The tally
  * is logged on success (sightwork_pack_use, with the new count) and on
  * failure (sightwork_pack_use_failed), so pack usage is auditable from
- * the server log without a separate Stripe read.
+ * the server log without a separate Stripe read. A finished plan on a
+ * sub code logs its use too (sightwork_sub_use, with the subscription
+ * id), so subscriber completions are auditable the same way.
  * Keyless, Stripe + Baseten + Meta all stubbed.
  */
 import { test, describe } from "node:test";
@@ -215,12 +217,29 @@ describe("POST /api/plan pack tally (offline, stubbed Stripe + Baseten)", () => 
     );
   });
 
-  test("sub code: a finished plan records nothing", async () => {
+  test("sub code: a finished plan writes nothing to Stripe", async () => {
     const { lines, stripeGets, stripePosts } = await run({ env: BILLING_ENV, code: sub });
     donePlan(lines);
     assert.ok(!lines.some((l) => l.state === "failed"));
     assert.equal(stripeGets.filter((u) => u.includes("/subscriptions/")).length, 1);
     assert.equal(stripePosts.length, 0);
+  });
+
+  test("sub code: a finished plan logs the use", async () => {
+    const { lines, logs, stripePosts } = await run({ env: BILLING_ENV, code: sub });
+    donePlan(lines);
+    assert.equal(stripePosts.length, 0, "no Stripe write for a sub run");
+    const use = logs.map((l) => {
+      try {
+        return JSON.parse(l) as unknown;
+      } catch {
+        return null;
+      }
+    });
+    assert.deepEqual(
+      use.find((e) => (e as { event?: unknown } | null)?.event === "sightwork_sub_use"),
+      { event: "sightwork_sub_use", customer: "sub_Abc123456" },
+    );
   });
 
   test("pack code: a finished plan logs the tally (used 3)", async () => {
