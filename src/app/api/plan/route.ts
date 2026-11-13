@@ -50,7 +50,7 @@
  * sitting first keeps invalid-code probes out of the rate limiter.
  * After the done line, a finished plan on a pack code is recorded
  * with recordPackUse (best-effort, logged on success and failure); a sub code
- * records nothing, and billing off records nothing.
+ * logs its use (sightwork_sub_use, no Stripe write), and billing off records nothing.
  */
 
 import { checkEntitlement, type Entitlement } from "../../../lib/billing/entitlement";
@@ -361,6 +361,15 @@ export async function POST(req: Request): Promise<Response> {
                 ? { event: "sightwork_pack_use", customer: entitlement.stripeId, used: r.used }
                 : { event: "sightwork_pack_use_failed", reason: r.reason },
             ),
+          );
+        } else if (entitlement?.allowed && entitlement.kind === "sub") {
+          // Sub use (2026-11-13): a subscription has no tally to
+          // record, but a finished plan on a sub code still logs its
+          // use, so a subscriber's completed plans are auditable
+          // from the server log without a separate Stripe read —
+          // the same gap the pack tally log closed. No Stripe write.
+          console.log(
+            JSON.stringify({ event: "sightwork_sub_use", customer: entitlement.stripeId }),
           );
         }
         console.log(
