@@ -48,9 +48,13 @@
  * only gate. The check depends only on the header, never the body,
  * so there is no reason it must sit after body validation — and
  * sitting first keeps invalid-code probes out of the rate limiter.
+ * After the done line, a finished plan on a pack code is recorded
+ * with recordPackUse (best-effort, logged on failure); a sub code
+ * records nothing, and billing off records nothing.
  */
 
-import { checkEntitlement } from "../../../lib/billing/entitlement";
+import { checkEntitlement, type Entitlement } from "../../../lib/billing/entitlement";
+import { recordPackUse } from "../../../lib/billing/packUse";
 import { createBasetenClient, createReasonBasetenCaller } from "../../../lib/meta/baseten";
 import {
   createCostSparkCaller,
@@ -182,8 +186,11 @@ export async function POST(req: Request): Promise<Response> {
   // be reached, so the caller retries instead of reading the 402 as
   // a dead code.
   const accessCode = req.headers.get("x-sightwork-access-code");
+  // Hoisted out of the block below so the done line can record the
+  // finished plan against its pack (2026-11-13).
+  let entitlement: Entitlement | undefined;
   if (accessCode) {
-    const entitlement = await checkEntitlement(accessCode);
+    entitlement = await checkEntitlement(accessCode);
     if (!entitlement.allowed && entitlement.reason !== "off") {
       return new Response(
         JSON.stringify({
@@ -329,6 +336,14 @@ export async function POST(req: Request): Promise<Response> {
           startedAtMs: handlerStartedAtMs,
         });
         push({ state: "done", plan });
+        // Pack tally (2026-11-13): a finished plan counts against its
+        // pack. Best-effort: the plan is already built, so a
+        // bookkeeping failure is logged server-side and never fails
+        // the run.
+        if (entitlement?.allowed && entitlement.kind === "pack") {
+          const r = await recordPackUse(entitlement.stripeId);
+          if (!r.ok) console.log(JSON.stringify({ event: "sightwork_pack_use_failed", reason: r.reason }));
+        }
         console.log(
           `plan route: done, provider ${plan.meta?.planProvider ?? "unset"}, ` +
             `skipped ${JSON.stringify(plan.meta?.skipped ?? {})}, ` +
