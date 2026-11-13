@@ -6,6 +6,7 @@
 // same moment can both read the same count and lose one increment: Stripe metadata has no
 // atomic counter, which is acceptable at plan-pack volumes.
 import { STRIPE_API } from "./checkout";
+import { findPlan } from "./plans";
 
 export const PLANS_USED_KEY = "sightwork_plans_used";
 
@@ -52,4 +53,19 @@ export async function recordPackUse(
   } catch {
     return { ok: false, reason: "stripe" };
   }
+}
+
+/**
+ * Plans bought, from a page of the customer's Checkout sessions. Only paid one-time
+ * purchases of a SightWork plan count; subscriptions, unpaid and unknown sessions add nothing.
+ */
+export function plansBought(sessions: unknown): number {
+  if (!Array.isArray(sessions)) return 0;
+  let total = 0;
+  for (const s of sessions as Array<Record<string, unknown> | null>) {
+    if (!s || s.mode !== "payment" || s.payment_status !== "paid") continue;
+    const plan = findPlan((s.metadata as Record<string, unknown> | null | undefined)?.sightwork_plan);
+    if (plan?.mode === "payment" && typeof plan.credits === "number") total += plan.credits;
+  }
+  return total;
 }
