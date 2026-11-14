@@ -1,7 +1,7 @@
 /** /api/billing/recover logic: re-issued codes go only to the buyer's email; the screen answer never changes. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { brevoSender, handleBillingRecover, mailSender, parseSender, RECOVER_MESSAGE, resendSender } from "@/lib/billing/recover";
+import { brevoSender, handleBillingRecover, mailHtml, mailSender, parseSender, RECOVER_MESSAGE, resendSender } from "@/lib/billing/recover";
 import { verifyAccessCode } from "@/lib/billing/accessCode";
 
 const SECRET = "x".repeat(40);
@@ -112,12 +112,42 @@ test("brevoSender needs a key and a valid sender, and posts one transactional ma
   assert.equal(calls.length, 1);
   assert.equal(calls[0].url, "https://api.brevo.com/v3/smtp/email");
   assert.equal(calls[0].headers["api-key"], "xkeysib-x");
-  assert.deepEqual(JSON.parse(calls[0].body), { sender: { name: "SightWork", email: "hi@example.com" }, to: [{ email: "a@b.co" }], subject: "s", textContent: "t" });
+  assert.deepEqual(JSON.parse(calls[0].body), { sender: { name: "SightWork", email: "hi@example.com" }, to: [{ email: "a@b.co" }], subject: "s", textContent: "t", htmlContent: mailHtml("t") });
 });
 
-test("brevoSender throws on a refused send so recovery answers 503", async () => {
-  const s = brevoSender({ BREVO_API_KEY: "xkeysib-x", SIGHTWORK_MAIL_FROM: "hi@example.com" }, (async () => ({ ok: false, status: 401 })) as unknown as typeof fetch);
+test("brevoSender throws on a refused send so recovery answers 503, without retrying a refusal", async () => {
+  let n = 0;
+  const s = brevoSender({ BREVO_API_KEY: "xkeysib-x", SIGHTWORK_MAIL_FROM: "hi@example.com" }, (async () => {
+    n++;
+    return { ok: false, status: 401, json: async () => ({}) };
+  }) as unknown as typeof fetch, 0);
   await assert.rejects(() => s!({ to: "a@b.co", subject: "s", text: "t" }), /401/);
+  assert.equal(n, 1);
+});
+
+test("brevoSender tries once more after a rate limit, a server error or a dropped connection", async () => {
+  for (const first of [{ ok: false, status: 429 }, { ok: false, status: 502 }, "throw"] as const) {
+    let n = 0;
+    const s = brevoSender({ BREVO_API_KEY: "k", SIGHTWORK_MAIL_FROM: "hi@example.com" }, (async () => {
+      n++;
+      if (n === 1) {
+        if (first === "throw") throw new Error("socket hang up");
+        return { ...first, json: async () => ({}) };
+      }
+      return { ok: true, status: 201 };
+    }) as unknown as typeof fetch, 0);
+    await s!({ to: "a@b.co", subject: "s", text: "t" });
+    assert.equal(n, 2);
+  }
+  const s = brevoSender({ BREVO_API_KEY: "k", SIGHTWORK_MAIL_FROM: "hi@example.com" }, (async () => ({ ok: false, status: 503, json: async () => ({}) })) as unknown as typeof fetch, 0);
+  await assert.rejects(() => s!({ to: "a@b.co", subject: "s", text: "t" }), /503/);
+});
+
+test("mailHtml escapes the text, keeps paragraphs and marks access codes", () => {
+  const h = mailHtml("Hi <you> & co\n\nYour code:\nsw1.abc_D-1.sig-_9");
+  assert.match(h, /Hi &lt;you&gt; &amp; co/);
+  assert.match(h, /<p[^>]*>Your code:<br><code[^>]*>sw1\.abc_D-1\.sig-_9<\/code><\/p>/);
+  assert.doesNotMatch(h, /<you>/);
 });
 
 test("mailSender prefers Brevo, falls back to Resend, else null", async () => {
