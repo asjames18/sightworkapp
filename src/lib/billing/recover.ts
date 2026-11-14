@@ -17,7 +17,9 @@ type GetLike = (url: string, init: { method: string; headers: Record<string, str
 }>;
 export type MailSender = (mail: { to: string; subject: string; text: string }) => Promise<void>;
 
-export const RECOVER_MESSAGE = "If that email was used to buy a plan, we've sent your access code to it. It can take a few minutes.";
+export const RECOVER_MESSAGE =
+  "If that email was used to buy a plan, we've sent your access code to it. It can take a few minutes. " +
+  "Look for \"Your SightWork access code\" from no-reply@melanatedintech.com, and check your Updates, Promotions or spam folder if it isn't in your inbox.";
 const EMAIL = /^[^\s@<>"',;]{1,64}@[A-Za-z0-9.-]{1,190}\.[A-Za-z]{2,24}$/;
 const MAX_CODES = 5;
 
@@ -47,17 +49,50 @@ export function parseSender(from: string): { name?: string; email: string } | nu
   return EMAIL.test(bare) ? { email: bare } : null;
 }
 
+/** The plain-text mail as simple HTML: escaped, line breaks kept, access codes easy to select. */
+export function mailHtml(text: string): string {
+  const esc = text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+  const body = esc
+    .split(/\n{2,}/)
+    .map((para) => {
+      const p = para.replace(/(sw1\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+)/g, '<code style="font-size:15px;word-break:break-all;background:#f3f3f3;padding:2px 4px">$1</code>');
+      return `<p style="margin:0 0 16px">${p.replace(/\n/g, "<br>")}</p>`;
+    })
+    .join("");
+  return `<!doctype html><html><body style="font-family:Arial,Helvetica,sans-serif;font-size:15px;line-height:1.5;color:#111">${body}</body></html>`;
+}
+
+/** Brevo answers that are worth one more try: rate limits and its own server errors. */
+const RETRYABLE = (status: number) => status === 429 || status >= 500;
+
 /** Sends through Brevo's transactional API when BREVO_API_KEY and SIGHTWORK_MAIL_FROM are set; otherwise null. */
-export function brevoSender(env: Record<string, string | undefined>, fetchImpl: typeof fetch = fetch): MailSender | null {
+export function brevoSender(
+  env: Record<string, string | undefined>,
+  fetchImpl: typeof fetch = fetch,
+  retryDelayMs = 800,
+): MailSender | null {
   const key = env.BREVO_API_KEY?.trim();
   const sender = parseSender(env.SIGHTWORK_MAIL_FROM?.trim() ?? "");
   if (!key || !sender) return null;
   return async (m) => {
-    const res = await fetchImpl("https://api.brevo.com/v3/smtp/email", {
+    const init = {
       method: "POST",
       headers: { "api-key": key, "Content-Type": "application/json", Accept: "application/json" },
-      body: JSON.stringify({ sender, to: [{ email: m.to }], subject: m.subject, textContent: m.text }),
-    });
+      body: JSON.stringify({ sender, to: [{ email: m.to }], subject: m.subject, textContent: m.text, htmlContent: mailHtml(m.text) }),
+    };
+    // One retry on a dropped connection, a rate limit or a Brevo server error, so a brief hiccup doesn't lose
+    // a buyer's code. A refusal (bad key, bad sender) isn't retried: it won't change in a second.
+    let res: Response;
+    try {
+      res = await fetchImpl("https://api.brevo.com/v3/smtp/email", init);
+    } catch {
+      await new Promise((r) => setTimeout(r, retryDelayMs));
+      res = await fetchImpl("https://api.brevo.com/v3/smtp/email", init);
+    }
+    if (!res.ok && RETRYABLE(res.status)) {
+      await new Promise((r) => setTimeout(r, retryDelayMs));
+      res = await fetchImpl("https://api.brevo.com/v3/smtp/email", init);
+    }
     // Brevo's error body names the cause ("unauthorized", "invalid_parameter"...): keep its short code for the
     // log, never the message text, which can echo the address.
     if (!res.ok) throw new Error(`mail service answered ${res.status}${await brevoErrorCode(res)}`);
