@@ -75,7 +75,7 @@ export function BillingDone() {
             Your access code
           </h2>
           <p className="mt-1 max-w-2xl text-sm text-ink/75">
-            Save it somewhere safe. Anyone with this code can use your plans, and this page is the only place it is shown.
+            Save it somewhere safe. Anyone with this code can use your plans. We also email it to the address you paid with, from no-reply@melanatedintech.com (check Updates, Promotions or spam). If you lose it, use &ldquo;Lost your access code?&rdquo; on the pricing page.
           </p>
           {st.kept && (
             <p className="mt-1 max-w-2xl text-sm text-ink/75" data-testid="code-kept">

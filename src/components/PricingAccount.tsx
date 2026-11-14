@@ -131,7 +131,7 @@ export function PricingAccount() {
           Lost your access code?
         </h2>
         <p className="mt-1 text-sm text-ink/75">
-          Enter the email you paid with and we will send your code again.
+          Enter the email you typed at checkout and we will send your code again.
         </p>
         <label
           htmlFor="recover-email"
