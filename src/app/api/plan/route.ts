@@ -416,6 +416,20 @@ export async function POST(req: Request): Promise<Response> {
             JSON.stringify({ event: "sightwork_sub_use", customer: entitlement.stripeId }),
           );
         }
+        // A finished run leaves a countable server-log trace
+        // (2026-11-14): the done line below is plain text, so a run
+        // that ships a plan is otherwise invisible to a log counter
+        // — refusals and failures all have JSON events now, and a
+        // completion is the last terminal outcome without one. Same
+        // JSON-event shape; cost is the spike total (0 when nothing
+        // billed).
+        console.log(
+          JSON.stringify({
+            event: "sightwork_run_succeeded",
+            route: "plan",
+            costUsd: tracker.totals().spikeTotalUsd,
+          }),
+        );
         console.log(
           `plan route: done, provider ${plan.meta?.planProvider ?? "unset"}, ` +
             `skipped ${JSON.stringify(plan.meta?.skipped ?? {})}, ` +
