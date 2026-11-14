@@ -245,6 +245,19 @@ export async function POST(req: Request): Promise<Response> {
       // that went away still paid for the whole ASR call.
       signal: req.signal,
     });
+    // A finished transcribe leaves a countable server-log trace
+    // (2026-11-14): the done line below is plain text, so a run
+    // that ships a transcript is otherwise invisible to a log
+    // counter — refusals and failures all have JSON events now, and
+    // a completion is the last terminal outcome without one. Same
+    // JSON-event shape; cost is the spike total.
+    console.log(
+      JSON.stringify({
+        event: "sightwork_run_succeeded",
+        route: "transcribe",
+        costUsd: tracker.totals().spikeTotalUsd,
+      }),
+    );
     console.log(
       `transcribe route: done, spike total $${tracker.totals().spikeTotalUsd}, ` +
         `${tracker.records().length} calls: ` +
