@@ -110,6 +110,21 @@ function errorResponse(message: string, status: number, extra?: Record<string, u
   });
 }
 
+/**
+ * True when the error is a client abort (same shape as POST /api/plan's
+ * helper): the request signal aborted, so the in-flight ASR fetch
+ * rejected with an AbortError — named, not a wrapped error, because
+ * neither the ASR caller nor runTranscribe wraps a fetch rejection.
+ */
+function isAbort(err: unknown): boolean {
+  return (
+    (err instanceof Error && err.name === "AbortError") ||
+    (typeof err === "object" &&
+      err !== null &&
+      (err as { name?: unknown }).name === "AbortError")
+  );
+}
+
 export async function POST(req: Request): Promise<Response> {
   // Access-code entitlement (2026-11-13): the same gate as POST
   // /api/plan, at the top, so a paid run's split transcribe call is
@@ -295,14 +310,21 @@ export async function POST(req: Request): Promise<Response> {
     // otherwise invisible to a log counter. Same JSON-event shape as
     // the refusal logs; cost is the spike total (0 when nothing
     // billed). The event fires whenever the route answers a 500,
-    // matching the plan route's failed-line event.
-    console.log(
-      JSON.stringify({
-        event: "sightwork_run_failed",
-        route: "transcribe",
-        costUsd: tracker.totals().spikeTotalUsd,
-      }),
-    );
+    // matching the plan route's failed-line event — except an abort:
+    // the client went away, so an aborted run is not a failure and
+    // logs no event, the same rule POST /api/plan applies (2026-11-14).
+    // Without this a split transcribe aborted mid-flight counts as a
+    // failed run in the log counter. The plain-text lines above stay
+    // for diagnosis, and the 500 below is unchanged.
+    if (!isAbort(err)) {
+      console.log(
+        JSON.stringify({
+          event: "sightwork_run_failed",
+          route: "transcribe",
+          costUsd: tracker.totals().spikeTotalUsd,
+        }),
+      );
+    }
     // Parity with the success path (and the 7:45 AM costUsd change):
     // a billed ASR failure is already recorded on the tracker by the
     // transcribe step's recordFailedCall, so the 500 carries the same
