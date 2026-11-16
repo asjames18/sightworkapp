@@ -79,8 +79,14 @@ test("recorder: on a 320x568 phone the light sits beside Cancel and Start still 
   const light = cam.getByTestId("torch-toggle");
   const cancel = cam.getByRole("button", { name: "Cancel" });
   await expect(cam.getByRole("button", { name: "Start recording" })).toBeInViewport();
-  const [a, b] = await Promise.all([light.boundingBox(), cancel.boundingBox()]);
-  expect(a && b && Math.abs(a.y - b.y) < 2).toBe(true);
+  await expect(light).toBeVisible();
+  await expect
+    .poll(async () => {
+      const [a, b] = await Promise.all([light.boundingBox(), cancel.boundingBox()]);
+      return a && b ? Math.abs(a.y - b.y) : null;
+    })
+    .toBeLessThan(2);
+  const a = await light.boundingBox();
   expect(a!.height).toBeGreaterThanOrEqual(44);
   await expectNoSideScroll(page);
   await cancel.click();
