@@ -1,4 +1,4 @@
-/** POST /api/plan failed-run log (2026-11-13): a run that dies mid-pipeline — a step failure after billed calls, or a wiring failure with no key — streams its failed line, and now also leaves a server-log trace (sightwork_run_failed, route + the failed step + the spike total, 0 when nothing billed), the same audit gap the refusal logs closed. A finished plan logs no event. No live calls: fetch is stubbed in-process and the keys are dummy values. */
+/** POST /api/plan failed-run log (2026-11-13): a run that dies mid-pipeline — a step failure after billed calls, or a wiring failure with no key — streams its failed line, and now also leaves a server-log trace (sightwork_run_failed, route + the failed step + the spike total, 0 when nothing billed), the same audit gap the refusal logs closed. A finished plan logs no event. An aborted plan (2026-11-14) is not a failure either: the client went away, so the stream ends with the running lines only and no run-failed event is logged. No live calls: fetch is stubbed in-process and the keys are dummy values. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { POST } from "../../src/app/api/plan/route";
@@ -247,4 +247,62 @@ test("a finished plan logs no sightwork_run_failed", async () => {
     }
     delete process.env.SIGHTWORK_BILLING;
   }
+});
+
+test("an aborted plan logs no sightwork_run_failed and streams no failed line", async () => {
+  // The request signal is the pipeline's stop signal: stub fetch to hang
+  // until it aborts, then reject with an AbortError — the shape a real
+  // fetch rejection takes mid-flight — and abort once the ASR call is in
+  // flight, so the abort lands mid-run rather than before it starts.
+  let calls = 0;
+  let seenSignal: unknown;
+  const stub = ((input: string | URL | Request, init?: RequestInit) => {
+    calls++;
+    seenSignal = init?.signal;
+    return new Promise((_resolve, reject) => {
+      const err = new Error("asr: aborted");
+      err.name = "AbortError";
+      const signal = init?.signal;
+      if (signal?.aborted) {
+        reject(err);
+        return;
+      }
+      signal?.addEventListener("abort", () => reject(err), { once: true });
+    });
+  }) as typeof fetch;
+  await withEnv(
+    { MODEL_API_KEY: "dummy-key", META_API_KEY: "dummy-key", BASETEN_API_KEY: "dummy-key" },
+    stub,
+    async (logs) => {
+      const controller = new AbortController();
+      const resPromise = POST(
+        new Request("http://localhost/api/plan", {
+          method: "POST",
+          body: body(),
+          signal: controller.signal,
+        }),
+      );
+      // Wait until the route has actually reached the ASR fetch, so the
+      // abort below is mid-flight rather than before the call starts.
+      for (let i = 0; i < 100 && calls === 0; i++) {
+        await new Promise((r) => setTimeout(r, 10));
+      }
+      assert.equal(calls, 1);
+      assert.ok(seenSignal instanceof AbortSignal);
+      controller.abort();
+      assert.equal((seenSignal as AbortSignal).aborted, true);
+      const res = await resPromise;
+      const lines = (await res.text())
+        .split("\n")
+        .filter(Boolean)
+        .map((l) => JSON.parse(l) as PlanJobStatus);
+      // The stream ends with the running lines only: no failed line is
+      // pushed for an abort, and no failed-run event is logged — an
+      // abort is not a failure.
+      assert.ok(lines.length > 0);
+      assert.ok(lines.every((l) => l.state === "running"));
+      assert.deepEqual(runFailed(logs), []);
+      assert.equal(calls, 1);
+    },
+  );
 });
