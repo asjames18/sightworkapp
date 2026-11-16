@@ -172,6 +172,18 @@ function isAbort(err: unknown): boolean {
   );
 }
 
+/**
+ * True when the request declares a JSON body (2026-11-16, security
+ * pass #7): the media type before any ";..." parameter, lower-cased,
+ * must be application/json. A missing header — or undici's
+ * text/plain default for a bare string body — is not JSON.
+ */
+function isJsonContentType(req: Request): boolean {
+  const raw = req.headers.get("content-type");
+  if (!raw) return false;
+  return raw.split(";")[0].trim().toLowerCase() === "application/json";
+}
+
 export async function POST(req: Request): Promise<Response> {
   // Handler start for runPlan's picturing time-limit skip: the 300 s
   // host limit counts from invocation, so the elapsed time must
@@ -218,6 +230,21 @@ export async function POST(req: Request): Promise<Response> {
     }
   }
   let bodyText: string;
+  // Content-Type check (2026-11-16, security pass #7): the route
+  // only accepts JSON bodies, so a request that does not declare
+  // application/json is refused with 415 before the body is read —
+  // a bare string body arrives as text/plain (undici's default) and
+  // would otherwise be parsed as JSON anyway. The real browser
+  // client sends application/json on both calls, so no valid request
+  // changes. Same countable JSON-event shape as the other refusal
+  // logs; route only, never the body.
+  if (!isJsonContentType(req)) {
+    console.log(JSON.stringify({ event: "sightwork_wrong_content_type", route: "plan" }));
+    return new Response(
+      JSON.stringify({ error: "plan request must use Content-Type application/json" }),
+      { status: 415, headers: { "Content-Type": "application/json" } },
+    );
+  }
   try {
     bodyText = await req.text();
   } catch {
