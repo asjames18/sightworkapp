@@ -8,6 +8,7 @@ const ENV: Record<string, string> = Object.fromEntries(
 );
 const ORIGIN = "https://sightwork.vercel.app";
 const KEY = "sk_test_abc123DEF456";
+const EMAIL = "buyer@example.com";
 
 test("the catalog matches the agreed prices and has unique keys and env names", () => {
   assert.deepEqual(PAID_PLANS.map((p) => [p.key, p.usd]), [
@@ -32,7 +33,7 @@ test("findPlan and planPriceId only accept real values", () => {
 });
 
 test("a pack checks out as a one-time payment that makes a customer, with no discount codes", () => {
-  const p = new Map(buildCheckoutParams({ plan: findPlan("pack5")!, origin: ORIGIN, env: ENV }));
+  const p = new Map(buildCheckoutParams({ plan: findPlan("pack5")!, origin: ORIGIN, email: EMAIL, env: ENV }));
   assert.equal(p.get("mode"), "payment");
   assert.equal(p.get("customer_creation"), "always");
   assert.equal(p.get("line_items[0][price]"), ENV.SIGHTWORK_PRICE_PACK5);
@@ -42,21 +43,21 @@ test("a pack checks out as a one-time payment that makes a customer, with no dis
 });
 
 test("monthly plans take no codes and yearly plans allow the nonprofit code", () => {
-  const m = new Map(buildCheckoutParams({ plan: findPlan("church-monthly")!, origin: ORIGIN, env: ENV }));
+  const m = new Map(buildCheckoutParams({ plan: findPlan("church-monthly")!, origin: ORIGIN, email: EMAIL, env: ENV }));
   assert.equal(m.get("mode"), "subscription");
   assert.equal(m.has("customer_creation"), false);
   assert.equal(m.has("allow_promotion_codes"), false);
   assert.equal(m.get("subscription_data[metadata][sightwork_plan]"), "church-monthly");
-  const y = new Map(buildCheckoutParams({ plan: findPlan("ministry-yearly")!, origin: ORIGIN, env: ENV }));
+  const y = new Map(buildCheckoutParams({ plan: findPlan("ministry-yearly")!, origin: ORIGIN, email: EMAIL, env: ENV }));
   assert.equal(y.get("allow_promotion_codes"), "true");
 });
 
 test("a missing price or a foreign origin is refused", () => {
-  assert.throws(() => buildCheckoutParams({ plan: findPlan("single")!, origin: ORIGIN, env: {} }), /no Stripe price/);
+  assert.throws(() => buildCheckoutParams({ plan: findPlan("single")!, origin: ORIGIN, email: EMAIL, env: {} }), /no Stripe price/);
   for (const o of ["http://sightwork.vercel.app", "https://evil.example/x", "javascript:alert(1)"]) {
-    assert.throws(() => buildCheckoutParams({ plan: findPlan("single")!, origin: o, env: ENV }), /origin/, o);
+    assert.throws(() => buildCheckoutParams({ plan: findPlan("single")!, origin: o, email: EMAIL, env: ENV }), /origin/, o);
   }
-  assert.doesNotThrow(() => buildCheckoutParams({ plan: findPlan("single")!, origin: "http://localhost:3000", env: ENV }));
+  assert.doesNotThrow(() => buildCheckoutParams({ plan: findPlan("single")!, origin: "http://localhost:3000", email: EMAIL, env: ENV }));
 });
 
 test("creating a session posts a form with the key only in the header", async () => {
@@ -65,7 +66,7 @@ test("creating a session posts a form with the key only in the header", async ()
     seen = { url, init };
     return { ok: true, status: 200, json: async () => ({ id: "cs_test_1", url: "https://checkout.stripe.com/c/pay/cs_test_1" }) };
   };
-  const r = await createCheckoutSession({ plan: findPlan("single")!, origin: ORIGIN, env: ENV, secretKey: KEY, fetchImpl });
+  const r = await createCheckoutSession({ plan: findPlan("single")!, origin: ORIGIN, email: EMAIL, env: ENV, secretKey: KEY, fetchImpl });
   assert.deepEqual(r, { id: "cs_test_1", url: "https://checkout.stripe.com/c/pay/cs_test_1" });
   assert.equal(seen!.url, "https://api.stripe.com/v1/checkout/sessions");
   assert.equal(seen!.init.headers.Authorization, `Bearer ${KEY}`);
@@ -75,12 +76,43 @@ test("creating a session posts a form with the key only in the header", async ()
 
 test("no key, a Stripe error or an odd answer fails with a plain message", async () => {
   const plan = findPlan("single")!;
-  await assert.rejects(createCheckoutSession({ plan, origin: ORIGIN, env: ENV, secretKey: undefined }), /key is not set/);
-  await assert.rejects(createCheckoutSession({ plan, origin: ORIGIN, env: ENV, secretKey: "pk_test_abc" }), /key is not set/);
+  await assert.rejects(createCheckoutSession({ plan, origin: ORIGIN, email: EMAIL, env: ENV, secretKey: undefined }), /key is not set/);
+  await assert.rejects(createCheckoutSession({ plan, origin: ORIGIN, email: EMAIL, env: ENV, secretKey: "pk_test_abc" }), /key is not set/);
   const err: FetchLike = async () => ({ ok: false, status: 400, json: async () => ({ error: { message: "secret detail" } }) });
-  await assert.rejects(createCheckoutSession({ plan, origin: ORIGIN, env: ENV, secretKey: KEY, fetchImpl: err }), (e: Error) =>
+  await assert.rejects(createCheckoutSession({ plan, origin: ORIGIN, email: EMAIL, env: ENV, secretKey: KEY, fetchImpl: err }), (e: Error) =>
     e.message === "checkout: Stripe answered 400",
   );
   const odd: FetchLike = async () => ({ ok: true, status: 200, json: async () => ({ id: "cs_1", url: "https://evil.example" }) });
-  await assert.rejects(createCheckoutSession({ plan, origin: ORIGIN, env: ENV, secretKey: KEY, fetchImpl: odd }), /unexpected/);
+  await assert.rejects(createCheckoutSession({ plan, origin: ORIGIN, email: EMAIL, env: ENV, secretKey: KEY, fetchImpl: odd }), /unexpected/);
+});
+
+test("every plan sends the buyer's email as customer_email, trimmed and lower-cased", () => {
+  for (const plan of PAID_PLANS) {
+    const p = new Map(buildCheckoutParams({ plan, origin: ORIGIN, email: "  Buyer.Name@Example.COM ", env: ENV }));
+    assert.equal(p.get("customer_email"), "buyer.name@example.com", plan.key);
+  }
+  // Packs still ask Checkout to make the Customer, so the email lands on Customer.email.
+  assert.equal(new Map(buildCheckoutParams({ plan: findPlan("single")!, origin: ORIGIN, email: EMAIL, env: ENV })).get("customer_creation"), "always");
+});
+
+test("a missing or malformed email is refused before Stripe is called, without echoing it", async () => {
+  for (const email of ["", "   ", "nobody", "a@b", "two@@example.com", "sp ace@example.com", "<x>@example.com", 5 as unknown as string, undefined as unknown as string]) {
+    assert.throws(() => buildCheckoutParams({ plan: findPlan("single")!, origin: ORIGIN, email, env: ENV }), (e: Error) =>
+      e.message === "checkout: a valid buyer email is required",
+    );
+  }
+  const never: FetchLike = async () => {
+    throw new Error("must not call Stripe");
+  };
+  await assert.rejects(createCheckoutSession({ plan: findPlan("single")!, origin: ORIGIN, email: "nope", env: ENV, secretKey: KEY, fetchImpl: never }), /valid buyer email/);
+});
+
+test("the posted form carries the email for Stripe", async () => {
+  let body = "";
+  const fetchImpl: FetchLike = async (_url, init) => {
+    body = init.body;
+    return { ok: true, status: 200, json: async () => ({ id: "cs_test_1", url: "https://checkout.stripe.com/c/pay/cs_test_1" }) };
+  };
+  await createCheckoutSession({ plan: findPlan("church-monthly")!, origin: ORIGIN, email: EMAIL, env: ENV, secretKey: KEY, fetchImpl });
+  assert.equal(new URLSearchParams(body).get("customer_email"), EMAIL);
 });

@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { handleCheckout } from "@/lib/billing/checkoutHandler";
 
-/** POST /api/billing/checkout: { plan } in, { url } of Stripe's hosted Checkout out. 404 unless SIGHTWORK_BILLING=on. */
+/** POST /api/billing/checkout: { plan, email } in, { url } of Stripe's hosted Checkout out. 404 unless SIGHTWORK_BILLING=on. */
 export async function POST(request: NextRequest) {
   let body: unknown = null;
   if (

@@ -3,6 +3,7 @@
 // whether or not anything was found, so the form can't be used to learn who has bought.
 import { accessSecret, billingEnabled, issueAccessCode, type AccessGrant } from "./accessCode";
 import { STRIPE_API } from "./checkout";
+import { EMAIL_PATTERN } from "./email";
 import { findPlan } from "./plans";
 
 export interface RecoverReply {
@@ -20,7 +21,7 @@ export type MailSender = (mail: { to: string; subject: string; text: string }) =
 export const RECOVER_MESSAGE =
   "If that email was used to buy a plan, we've sent your access code to it. It can take a few minutes. " +
   "Look for \"Your SightWork access code\" from no-reply@melanatedintech.com, and check your Updates, Promotions or spam folder if it isn't in your inbox.";
-const EMAIL = /^[^\s@<>"',;]{1,64}@[A-Za-z0-9.-]{1,190}\.[A-Za-z]{2,24}$/;
+const EMAIL = EMAIL_PATTERN;
 const MAX_CODES = 5;
 
 const idOf = (v: unknown): string | null =>

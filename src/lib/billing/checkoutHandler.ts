@@ -2,6 +2,7 @@
 // without a server. Server only.
 import { billingEnabled } from "./accessCode";
 import { createCheckoutSession, type FetchLike } from "./checkout";
+import { normalizeEmail } from "./email";
 import { findPlan } from "./plans";
 
 export interface CheckoutReply {
@@ -22,17 +23,24 @@ export async function handleCheckout(
     return { status: 404, body: { error: "Not found." } };
   const plan = findPlan((rawBody as { plan?: unknown } | null)?.plan);
   if (!plan) return { status: 400, body: { error: "Pick a plan to buy." } };
+  const email = normalizeEmail((rawBody as { email?: unknown } | null)?.email);
+  if (!email)
+    return {
+      status: 400,
+      body: { error: "Enter a valid email address so we can send your access code." },
+    };
   try {
     const s = await createCheckoutSession({
       plan,
       origin: ctx.origin,
+      email,
       env,
       secretKey: env.STRIPE_SECRET_KEY,
       fetchImpl: ctx.fetchImpl,
     });
     return { status: 200, body: { url: s.url } };
   } catch (e) {
-    // The detail stays in the server log; buyers get one plain line.
+    // The detail stays in the server log; buyers get one plain line. The buyer's email is never logged.
     console.error(
       JSON.stringify({
         event: "sightwork_checkout_failed",

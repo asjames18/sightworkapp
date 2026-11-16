@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { normalizeEmail } from "@/lib/billing/email";
 
 type Billing = "monthly" | "yearly";
 
@@ -35,20 +36,32 @@ const SUBS = [
   { base: "multisite", name: "Multi-site", monthly: "$129", yearly: "$1,290" },
 ] as const;
 
-/** Plan cards that send the buyer to Stripe's hosted Checkout. */
+/**
+ * Plan cards that send the buyer to Stripe's hosted Checkout. The buyer's email is required first:
+ * the buy buttons stay disabled until it is valid, so Stripe's page (with its Apple Pay, Google Pay
+ * and Link buttons) only opens with an email we can send the access code to.
+ */
 export function PricingPlans() {
   const [billing, setBilling] = useState<Billing>("monthly");
+  const [email, setEmail] = useState("");
+  const [emailTouched, setEmailTouched] = useState(false);
+  const emailOk = normalizeEmail(email) !== null;
+  const showEmailError = emailTouched && !emailOk;
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   async function buy(plan: string) {
+    if (!emailOk) {
+      setEmailTouched(true);
+      return;
+    }
     setBusy(plan);
     setError(null);
     try {
       const res = await fetch("/api/billing/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ plan }),
+        body: JSON.stringify({ plan, email: email.trim() }),
       });
       const j = (await res.json().catch(() => ({}))) as {
         url?: string;
@@ -76,7 +89,43 @@ export function PricingPlans() {
     "flex flex-col rounded-2xl border border-ink/15 bg-white p-5 shadow-sm";
   return (
     <div className="mt-8">
-      <h2 className="text-xl font-extrabold">Pay as you go</h2>
+      <div className="max-w-md rounded-2xl border border-ink/15 bg-white p-5 shadow-sm">
+        <label htmlFor="checkout-email" className="block text-sm font-semibold">
+          Email (required)
+        </label>
+        <p id="checkout-email-hint" className="mt-1 text-sm text-ink/75">
+          We send your access code here, and can send it again if you lose it.
+          Enter it before you pay, whether by card or Apple Pay.
+        </p>
+        <input
+          id="checkout-email"
+          type="email"
+          inputMode="email"
+          autoComplete="email"
+          required
+          aria-required="true"
+          aria-invalid={showEmailError}
+          aria-describedby={
+            showEmailError
+              ? "checkout-email-hint checkout-email-error"
+              : "checkout-email-hint"
+          }
+          className="mt-2 block min-h-11 w-full rounded-xl border border-ink/30 bg-white px-3 text-base focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          onBlur={() => setEmailTouched(true)}
+          data-testid="checkout-email"
+        />
+        <p
+          id="checkout-email-error"
+          className="mt-1 min-h-5 text-sm font-semibold text-red-700"
+          data-testid="checkout-email-error"
+        >
+          {showEmailError ? "Enter a valid email address, like name@example.com." : ""}
+        </p>
+      </div>
+
+      <h2 className="mt-8 text-xl font-extrabold">Pay as you go</h2>
       <div className="mt-4 grid gap-4 sm:grid-cols-2">
         {PACKS.map((p) => (
           <section
@@ -93,7 +142,7 @@ export function PricingPlans() {
               type="button"
               className="btn-primary mt-4"
               onClick={() => buy(p.key)}
-              disabled={busy !== null}
+              disabled={busy !== null || !emailOk}
               data-testid={`buy-${p.key}`}
             >
               {busy === p.key ? "Opening checkout…" : `Buy ${p.name}`}
@@ -153,7 +202,7 @@ export function PricingPlans() {
                 type="button"
                 className="btn-primary mt-4"
                 onClick={() => buy(key)}
-                disabled={busy !== null}
+                disabled={busy !== null || !emailOk}
                 data-testid={`buy-${s.base}`}
               >
                 {busy === key ? "Opening checkout…" : `Subscribe`}

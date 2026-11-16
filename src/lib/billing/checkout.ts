@@ -1,5 +1,6 @@
 // Builds and creates Stripe hosted Checkout sessions over the Stripe REST API with fetch,
 // so SightWork needs no Stripe library. Server only. The secret key comes from STRIPE_SECRET_KEY.
+import { normalizeEmail } from "./email";
 import { planPriceId, type PaidPlan } from "./plans";
 
 export const STRIPE_API = "https://api.stripe.com/v1";
@@ -8,16 +9,24 @@ export interface CheckoutInput {
   plan: PaidPlan;
   /** Absolute origin of this site, e.g. https://sightwork.vercel.app (no trailing slash). */
   origin: string;
+  /**
+   * The buyer's email, typed on the pricing page before Stripe's page (and its Apple Pay and Link
+   * buttons) opens. Sent as customer_email, so Stripe saves it on the Customer it creates.
+   */
+  email: string;
   env?: Record<string, string | undefined>;
 }
 
 /** The form fields for POST /v1/checkout/sessions, in order. Throws when the plan can't be sold. */
-export function buildCheckoutParams({ plan, origin, env = process.env }: CheckoutInput): [string, string][] {
+export function buildCheckoutParams({ plan, origin, email, env = process.env }: CheckoutInput): [string, string][] {
   const price = planPriceId(plan, env);
   if (!price) throw new Error(`checkout: no Stripe price is set for ${plan.key}`);
   if (!/^https:\/\/[a-z0-9.-]+(:\d+)?$/i.test(origin) && !/^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin)) {
     throw new Error("checkout: origin must be this site's https address");
   }
+  const customerEmail = normalizeEmail(email);
+  // The message never carries the address itself.
+  if (!customerEmail) throw new Error("checkout: a valid buyer email is required");
   const p: [string, string][] = [
     ["mode", plan.mode],
     ["line_items[0][price]", price],
@@ -27,6 +36,10 @@ export function buildCheckoutParams({ plan, origin, env = process.env }: Checkou
     ["cancel_url", `${origin}/pricing`],
     ["metadata[sightwork_plan]", plan.key],
     ["billing_address_collection", "auto"],
+    // Prefills and locks the email on Stripe's page, whichever way the buyer pays (card, Apple Pay,
+    // Google Pay or Link), and becomes the email of the Customer that Checkout creates. That
+    // Customer email is what "Find my purchase" searches to resend an access code.
+    ["customer_email", customerEmail],
   ];
   if (plan.mode === "payment") {
     // A Stripe customer holds a pack's credits, so always make one.
