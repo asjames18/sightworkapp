@@ -271,3 +271,64 @@ test("a refused request logs no sightwork_run_succeeded", async () => {
     },
   );
 });
+
+test("an aborted plan logs no sightwork_run_succeeded", async () => {
+  // Same abort shape as the failed-log abort test: stub fetch hangs
+  // until the request signal aborts, then rejects with an AbortError,
+  // and abort once the ASR call is in flight, so the abort lands
+  // mid-run. The succeeded event is logged only after a run finishes
+  // (after the done push), so an aborted run must log none — without
+  // this, a client that walks away mid-plan would count as a
+  // completed run in the log counter.
+  let calls = 0;
+  let seenSignal: unknown;
+  const stub = ((input: string | URL | Request, init?: RequestInit) => {
+    calls++;
+    seenSignal = init?.signal;
+    return new Promise((_resolve, reject) => {
+      const err = new Error("asr: aborted");
+      err.name = "AbortError";
+      const signal = init?.signal;
+      if (signal?.aborted) {
+        reject(err);
+        return;
+      }
+      signal?.addEventListener("abort", () => reject(err), { once: true });
+    });
+  }) as typeof fetch;
+  await withEnv(
+    { MODEL_API_KEY: "dummy-key", META_API_KEY: "dummy-key", BASETEN_API_KEY: "dummy-key" },
+    stub,
+    async (logs) => {
+      const controller = new AbortController();
+      const resPromise = POST(
+        new Request("http://localhost/api/plan", {
+          method: "POST",
+          body: body(),
+          signal: controller.signal,
+        }),
+      );
+      // Wait until the route has actually reached the ASR fetch, so the
+      // abort below is mid-flight rather than before the call starts.
+      for (let i = 0; i < 100 && calls === 0; i++) {
+        await new Promise((r) => setTimeout(r, 10));
+      }
+      assert.equal(calls, 1);
+      assert.ok(seenSignal instanceof AbortSignal);
+      controller.abort();
+      assert.equal((seenSignal as AbortSignal).aborted, true);
+      const res = await resPromise;
+      const lines = (await res.text())
+        .split("\n")
+        .filter(Boolean)
+        .map((l) => JSON.parse(l) as PlanJobStatus);
+      // The stream ends with the running lines only: no done line is
+      // pushed for an abort, and no succeeded-run event is logged.
+      assert.ok(lines.length > 0);
+      assert.ok(lines.every((l) => l.state === "running"));
+      assert.deepEqual(runSucceeded(logs), []);
+      assert.deepEqual(runFailed(logs), []);
+      assert.equal(calls, 1);
+    },
+  );
+});
