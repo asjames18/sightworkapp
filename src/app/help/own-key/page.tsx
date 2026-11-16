@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import { byokEnabled } from "@/lib/client/byokKey";
 
 export const metadata: Metadata = {
-  title: "How to use your own Meta API key | SightWork",
+  title: "How to bring your own Meta API key | SightWork",
   description: "Step by step: get a Meta Model API key, add it to SightWork, check it works, and keep it safe.",
   robots: { index: false },
 };
@@ -13,7 +13,6 @@ const link = "underline underline-offset-2 hover:text-ink focus-visible:outline-
 
 const META_AUTH = "https://dev.meta.ai/docs/authentication";
 const META_QUICKSTART = "https://dev.meta.ai/docs/quickstart";
-const META_PRICING = "https://dev.meta.ai/docs/pricing-rate-limits";
 
 function Ext({ href, children }: { href: string; children: React.ReactNode }) {
   return (
@@ -71,16 +70,16 @@ export default function OwnKeyHelp() {
         </div>
       </header>
       <main id="main-content" tabIndex={-1} className="outline-none mx-auto w-full max-w-3xl px-4 pb-16 pt-10 sm:px-6">
-        <h1 className="text-3xl font-extrabold tracking-tight">How to use your own Meta API key</h1>
+        <h1 className="text-3xl font-extrabold tracking-tight">How to bring your own Meta API key</h1>
         <p className="mt-3 text-base text-ink/80">
-          SightWork is free when you use your own key from Meta. This guide takes about 10 minutes. You don&apos;t need to
+          Bring your own Meta API key to run plans in SightWork. This guide takes about 10 minutes. You don&apos;t need to
           know how to code.
         </p>
 
         <div className="mt-6 rounded-2xl bg-accent/10 p-4 text-base sm:p-6" data-testid="own-key-billing">
-          <p className="font-semibold">Who pays for what</p>
+          <p className="font-semibold">Bring your own Meta API key</p>
           <ul className="mt-2 list-disc space-y-1 pl-5 text-ink/80">
-            <li>With your own key, you pay Meta directly for the model use your plans need. SightWork doesn&apos;t cover it or bill you for it.</li>
+            <li>Use a Meta API key to run plans in SightWork. The key stays in this browser.</li>
             <li>Don&apos;t want to deal with a key? Paid SightWork plans will run on SightWork&apos;s own access, so you won&apos;t need one.</li>
           </ul>
         </div>
@@ -95,7 +94,6 @@ export default function OwnKeyHelp() {
               ["#change-key", "Remove or replace it"],
               ["#safe-key", "Keep it safe"],
               ["#tips", "Tips for a good plan"],
-              ["#cost", "What it costs"],
             ].map(([href, label]) => (
               <li key={href}>
                 <a href={href} className="inline-flex min-h-11 items-center rounded-full px-3 ring-1 ring-ink/15 hover:bg-ink/5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">
@@ -145,7 +143,7 @@ export default function OwnKeyHelp() {
             </Step>
             <Step n={5} title="Paste and save">
               <p>
-                Under <strong>Use your own Meta API key</strong>, paste the key into the <strong>Meta API key</strong> box and
+                Under <strong>Bring your own Meta API key</strong>, paste the key into the <strong>Meta API key</strong> box and
                 press <strong>Save key</strong>.
               </p>
               <p>
@@ -238,19 +236,6 @@ export default function OwnKeyHelp() {
               </ul>
             </div>
           </div>
-        </Section>
-
-        <Section id="cost" title="What it costs">
-          <ul className="list-disc space-y-2 pl-5 text-base text-ink/80">
-            <li>
-              A rough estimate: about <strong>$1 per finished plan</strong> in Meta use. Most of that is the step that finds and
-              counts things in each frame. Bigger rooms and longer videos can cost a bit more.
-            </li>
-            <li>A plan that fails or that you stop partway can still use some credit.</li>
-            <li>
-              Meta sets the prices and can change them. See <Ext href={META_PRICING}>Meta Model API pricing</Ext>.
-            </li>
-          </ul>
         </Section>
 
         <div className="mt-12 flex flex-col gap-3 sm:flex-row">

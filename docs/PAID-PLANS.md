@@ -1,6 +1,6 @@
 # Paid plans: setup and test checklist
 
-Paid plans are off by default. Using SightWork with your own Meta key stays free and never touches any of this. This page is for anyone running their own copy who wants to take payments through Stripe.
+Paid plans are off by default. Using SightWork with your own Meta API key never touches any of this. This page is for anyone running their own copy who wants to take payments through Stripe.
 
 Everything below uses free tiers only. Stripe charges its normal per-payment fee only when a real payment happens, and test mode costs nothing.
 

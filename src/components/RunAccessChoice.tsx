@@ -11,7 +11,7 @@ const link = "font-semibold underline underline-offset-2 hover:text-ink focus-vi
 /**
  * The run choice: shown before filming (where="start") and on the video card (where="video") when "Make my
  * work plan" is pressed with no key, access code or tester code saved. Nothing is sent until one is chosen. The video stays on this card:
- * - "Use your own key (free)": paste the key right here (kept in this browser), and the plan starts on it;
+ * - "Bring your own Meta API key": paste the key right here (kept in this browser), and the plan starts on it;
  * - "Buy plans": the pricing page opens in a new tab; the access code from checkout goes in the field below
  *   (the return page also saves it in this browser).
  * `codeField` is the access-code form, which starts the run once a code is saved.

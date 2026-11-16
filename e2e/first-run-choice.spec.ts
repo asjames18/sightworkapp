@@ -13,9 +13,9 @@ test("home and app headers link Pricing and the own-key Settings; the hero names
     await page.goto("/");
     const nav = page.getByTestId("access-nav").first();
     await expect(nav.getByRole("link", { name: "Pricing" })).toHaveAttribute("href", "/pricing");
-    await expect(nav.getByRole("link", { name: /Own key|Use your own key/ })).toHaveAttribute("href", "/settings");
+    await expect(nav.getByRole("link", { name: /Own key|Bring your own key/ })).toHaveAttribute("href", "/settings");
     const hero = page.getByTestId("hero-access");
-    await expect(hero.getByRole("link", { name: "Free with your own Meta API key" })).toHaveAttribute("href", "/settings");
+    await expect(hero.getByRole("link", { name: "Bring your own Meta API key" })).toHaveAttribute("href", "/settings");
     await expect(hero.getByRole("link", { name: "buy plans" })).toHaveAttribute("href", "/pricing");
     await expectNoSideScroll(page);
     await expectNoAxeViolations(page, `home ${width}`);
@@ -23,7 +23,7 @@ test("home and app headers link Pricing and the own-key Settings; the hero names
     await page.goto("/start");
     const appNav = page.getByTestId("access-nav");
     await expect(appNav.getByRole("link", { name: "Pricing" })).toBeVisible();
-    await expect(appNav.getByRole("link", { name: /Own key|Use your own key/ })).toBeVisible();
+    await expect(appNav.getByRole("link", { name: /Own key|Bring your own key/ })).toBeVisible();
     await expectNoSideScroll(page);
   }
 });
@@ -67,7 +67,7 @@ test.describe("a run the server refuses for payment", () => {
     const links = page.getByTestId("paid-refusal-links");
     await expect(links).toBeVisible({ timeout: 30_000 });
     await expect(links.getByRole("link", { name: "Buy plans" })).toHaveAttribute("href", "/pricing");
-    await expect(links.getByRole("link", { name: "Use your own key (free)" })).toHaveAttribute("href", "/settings");
+    await expect(links.getByRole("link", { name: "Bring your own Meta API key" })).toHaveAttribute("href", "/settings");
     await page.getByRole("button", { name: "Use your own key or buy plans" }).click();
     const card = page.getByRole("group", { name: "Your walkthrough" });
     await expect(card).toContainText("walkthrough-6s.webm");

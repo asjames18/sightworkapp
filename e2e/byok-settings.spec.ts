@@ -15,7 +15,7 @@ test("own-key settings save, mask and forget the key, and never send it anywhere
   for (const width of [375, 768, 1280]) {
     await page.setViewportSize({ width, height: 800 });
     await page.goto("/settings");
-    await expect(page.getByRole("heading", { name: "Use your own Meta API key" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Bring your own Meta API key" })).toBeVisible();
     await expect(page.getByText("never sent to SightWork's servers", { exact: false })).toBeVisible();
     await expectNoSideScroll(page);
     await expectNoAxeViolations(page, `settings empty ${width}`);

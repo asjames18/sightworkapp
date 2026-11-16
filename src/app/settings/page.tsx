@@ -6,7 +6,7 @@ import { byokEnabled } from "@/lib/client/byokKey";
 
 export const metadata: Metadata = {
   title: "Settings | SightWork",
-  description: "Use SightWork free with your own Meta API key, kept only in your browser.",
+  description: "Bring your own Meta API key, kept only in your browser.",
   robots: { index: false },
 };
 
@@ -35,10 +35,10 @@ export default function Settings() {
 
         <section aria-labelledby="byok-heading" className="mt-8">
           <h2 id="byok-heading" className="text-xl font-extrabold">
-            Use your own Meta API key
+            Bring your own Meta API key
           </h2>
           <p className="mt-2 text-base text-ink/75">
-            SightWork is free with your own key. You pay Meta directly for your runs, usually about $0.40 to $1.20 a plan.
+            Add a Meta API key to run plans in this browser.
           </p>
           <p className="mt-3 text-base">
             <Link href="/help/own-key" className={`${link} font-semibold text-accent-dark`} data-testid="own-key-guide-link">
@@ -54,13 +54,6 @@ export default function Settings() {
           <div className="mt-6">
             <ByokKeyForm />
           </div>
-          <p className="mt-4 text-sm text-ink/75">
-            Prices are Meta&apos;s:{" "}
-            <a href="https://dev.meta.ai/docs/pricing-rate-limits" className={link} target="_blank" rel="noopener noreferrer">
-              Meta Model API pricing
-            </a>
-            .
-          </p>
         </section>
       </main>
     </>

@@ -10,10 +10,10 @@ test("paid plans are on only for an exact on", () => {
   for (const v of [undefined, "", "off", "1", "true"]) assert.equal(paidPlansOn(v), false, String(v));
 });
 
-test("both ways are offered, own key first because it is free, each with its page", () => {
+test("both ways are offered, own key first, each with its page", () => {
   const both = runOptions(true, true);
   assert.deepEqual(both.map((o) => o.key), ["own-key", "buy"]);
-  assert.equal(both[0].label, "Use your own key (free)");
+  assert.equal(both[0].label, "Bring your own Meta API key");
   assert.equal(both[0].href, SETTINGS_HREF);
   assert.equal(both[1].label, "Buy plans");
   assert.equal(both[1].href, PRICING_HREF);

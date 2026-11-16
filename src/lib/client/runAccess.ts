@@ -1,6 +1,6 @@
 /**
  * How someone without a code or key gets to make a plan from their own video. Two ways, offered together:
- * - Use your own Meta API key, free (own-key mode, kept in this browser, set in Settings);
+ * - Bring your own Meta API key (own-key mode, kept in this browser, set in Settings);
  * - Buy plans on the pricing page (Stripe checkout, an access code comes back).
  * Read in the browser and on the server: both flags are public build-time values.
  */
@@ -20,14 +20,14 @@ export function paidPlansOn(envValue: string | undefined = process.env.NEXT_PUBL
 
 export type RunOption = { key: "own-key" | "buy"; label: string; detail: string; href: string };
 
-/** The ways to run a plan this build offers, own key first because it is free. */
+/** The ways to run a plan this build offers, own key first. */
 export function runOptions(paid: boolean = paidPlansOn(), byok: boolean = byokEnabled()): RunOption[] {
   const out: RunOption[] = [];
   if (byok)
     out.push({
       key: "own-key",
-      label: "Use your own key (free)",
-      detail: "Paste a Meta API key once. It stays in this browser and Meta bills you directly, about $1 a plan.",
+      label: "Bring your own Meta API key",
+      detail: "Paste a Meta API key once. It stays in this browser.",
       href: SETTINGS_HREF,
     });
   if (paid)

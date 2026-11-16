@@ -88,7 +88,7 @@ test("real-run mode with nothing saved gates filming, then asks again on the vid
   // Before filming: the two ways to make a plan, and no record or choose buttons yet.
   const gate = page.getByTestId("start-gate");
   await expect(gate).toBeVisible();
-  await expect(gate.getByText("Use your own key (free)")).toBeVisible();
+  await expect(gate.getByText("Bring your own Meta API key")).toBeVisible();
   await expect(gate.getByRole("link", { name: /See plans and prices/ })).toHaveAttribute("href", "/pricing");
   await expect(page.getByRole("button", { name: "Record a walkthrough" })).toHaveCount(0);
   await expect(page.getByRole("button", { name: "Choose a video" })).toHaveCount(0);

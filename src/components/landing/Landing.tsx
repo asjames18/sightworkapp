@@ -89,7 +89,7 @@ function HeroAccessLine() {
     <p className="mt-5 max-w-2xl text-base text-ink/80" data-testid="hero-access">
       {byok && (
         <>
-          <Link href={SETTINGS_HREF} className={heroLink}>Free with your own Meta API key</Link>
+          <Link href={SETTINGS_HREF} className={heroLink}>Bring your own Meta API key</Link>
           {paid ? ", or " : "."}
         </>
       )}

@@ -49,9 +49,9 @@ export default function Pricing() {
         <PricingPlans />
         <PricingAccount />
         <p className="mt-8 text-sm text-ink/75">
-          Prefer to pay the model provider yourself?{" "}
+          You can also{" "}
           <Link href="/settings" className={link}>
-            Use SightWork free with your own Meta API key
+            bring your own Meta API key
           </Link>
           .
         </p>

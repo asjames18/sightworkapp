@@ -12,20 +12,19 @@ test("own-key guide is linked from Settings, reads cleanly at every width, and l
     await page.goto("/settings");
     await page.getByTestId("own-key-guide-link").click();
     await expect(page).toHaveURL(/\/help\/own-key$/);
-    await expect(page.getByRole("heading", { level: 1, name: "How to use your own Meta API key" })).toBeVisible();
+    await expect(page.getByRole("heading", { level: 1, name: "How to bring your own Meta API key" })).toBeVisible();
 
     // The labels the guide names are the real ones on the Settings screen.
     for (const text of ["Create API key", "Meta API key", "Save key", "Forget key", "Key saved in this browser."]) {
       await expect(page.locator("main").getByText(text, { exact: true }).first()).toBeVisible();
     }
-    await expect(page.getByTestId("own-key-billing")).toContainText("SightWork doesn't cover it or bill you for it");
+    await expect(page.getByTestId("own-key-billing")).toContainText("Use a Meta API key to run plans in SightWork");
     await expect(page.getByText("never sent to SightWork's servers", { exact: false })).toBeVisible();
 
     // Meta links open Meta's official docs in a new tab.
     const auth = page.getByRole("link", { name: /Authentication \(get an API key\)/ });
     await expect(auth).toHaveAttribute("href", "https://dev.meta.ai/docs/authentication");
     await expect(auth).toHaveAttribute("target", "_blank");
-    await expect(page.getByRole("link", { name: /Meta Model API pricing/ })).toHaveAttribute("href", "https://dev.meta.ai/docs/pricing-rate-limits");
 
     await expectNoSideScroll(page);
     await expectNoAxeViolations(page, `own-key guide ${width}`);

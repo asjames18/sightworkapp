@@ -24,7 +24,7 @@ export function AccessNavLinks({ compactOnPhone = false }: { compactOnPhone?: bo
       {byok && (
         <Link href={SETTINGS_HREF} className={`${navLink} ${compactOnPhone ? "hidden sm:inline-flex" : ""}`}>
           <span className="sm:hidden">Own key</span>
-          <span className="hidden sm:inline">Use your own key</span>
+          <span className="hidden sm:inline">Bring your own key</span>
         </Link>
       )}
     </nav>
