@@ -84,7 +84,7 @@ test("a failed ASR call is 500 and logs sightwork_run_failed with the response c
   const stub = (async () => new Response("upstream error", { status: 500 })) as typeof fetch;
   await withEnv({ MODEL_API_KEY: "dummy-key" }, stub, async (logs) => {
     const res = await POST(
-      new Request("http://localhost/api/transcribe", { method: "POST", body: transcribeBody() }),
+      new Request("http://localhost/api/transcribe", { method: "POST", headers: { "Content-Type": "application/json" }, body: transcribeBody() }),
     );
     assert.equal(res.status, 500);
     const body = (await res.json()) as { error?: string; costUsd?: number };
@@ -102,7 +102,7 @@ test("a thrown fetch is 500 and logs sightwork_run_failed with cost 0", async ()
   }) as typeof fetch;
   await withEnv({ MODEL_API_KEY: "dummy-key" }, stub, async (logs) => {
     const res = await POST(
-      new Request("http://localhost/api/transcribe", { method: "POST", body: transcribeBody() }),
+      new Request("http://localhost/api/transcribe", { method: "POST", headers: { "Content-Type": "application/json" }, body: transcribeBody() }),
     );
     assert.equal(res.status, 500);
     const body = (await res.json()) as { error?: string; costUsd?: number };
@@ -130,7 +130,7 @@ test("a finished transcribe logs no sightwork_run_failed", async () => {
   }) as typeof fetch;
   await withEnv({ MODEL_API_KEY: "dummy-key" }, stub, async (logs) => {
     const res = await POST(
-      new Request("http://localhost/api/transcribe", { method: "POST", body: transcribeBody() }),
+      new Request("http://localhost/api/transcribe", { method: "POST", headers: { "Content-Type": "application/json" }, body: transcribeBody() }),
     );
     assert.equal(res.status, 200);
     const body = (await res.json()) as { transcript?: string | null; costUsd?: number };

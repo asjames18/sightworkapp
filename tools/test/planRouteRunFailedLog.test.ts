@@ -59,7 +59,7 @@ function body(): string {
 }
 
 async function runLines(payload: string): Promise<PlanJobStatus[]> {
-  const res = await POST(new Request("http://localhost/api/plan", { method: "POST", body: payload }));
+  const res = await POST(new Request("http://localhost/api/plan", { method: "POST", headers: { "Content-Type": "application/json" }, body: payload }));
   const text = await res.text();
   return text.split("\n").filter(Boolean).map((l) => JSON.parse(l) as PlanJobStatus);
 }
@@ -228,7 +228,7 @@ test("a finished plan logs no sightwork_run_failed", async () => {
       transcript: null,
       transcriptTurns: [],
     });
-    const res = await POST(new Request("http://localhost/api/plan", { method: "POST", body: payload }));
+    const res = await POST(new Request("http://localhost/api/plan", { method: "POST", headers: { "Content-Type": "application/json" }, body: payload }));
     const lines = (await res.text())
       .split("\n")
       .filter(Boolean)
@@ -277,7 +277,7 @@ test("an aborted plan logs no sightwork_run_failed and streams no failed line", 
       const controller = new AbortController();
       const resPromise = POST(
         new Request("http://localhost/api/plan", {
-          method: "POST",
+          method: "POST", headers: { "Content-Type": "application/json" },
           body: body(),
           signal: controller.signal,
         }),

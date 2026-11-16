@@ -33,7 +33,7 @@ async function run(payload: string): Promise<{ lines: PlanJobStatus[]; fetches: 
   }) as typeof fetch;
   console.error = () => {};
   try {
-    const res = await POST(new Request("http://localhost/api/plan", { method: "POST", body: payload }));
+    const res = await POST(new Request("http://localhost/api/plan", { method: "POST", headers: { "Content-Type": "application/json" }, body: payload }));
     const text = await res.text();
     const lines = text.split("\n").filter(Boolean).map((l) => JSON.parse(l) as PlanJobStatus);
     return { lines, fetches };

@@ -47,7 +47,7 @@ function body(): string {
 }
 
 async function runLines(payload: string): Promise<PlanJobStatus[]> {
-  const res = await POST(new Request("http://localhost/api/plan", { method: "POST", body: payload }));
+  const res = await POST(new Request("http://localhost/api/plan", { method: "POST", headers: { "Content-Type": "application/json" }, body: payload }));
   const text = await res.text();
   return text.split("\n").filter(Boolean).map((l) => JSON.parse(l) as PlanJobStatus);
 }

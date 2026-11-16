@@ -31,7 +31,7 @@ test("an oversize transcribe body is 413 and logs sightwork_body_too_large", asy
   try {
     const body = "x".repeat(MAX_TRANSCRIBE_BODY_BYTES + 1);
     const res = await POST(
-      new Request("http://localhost/api/transcribe", { method: "POST", body }),
+      new Request("http://localhost/api/transcribe", { method: "POST", headers: { "Content-Type": "application/json" }, body }),
     );
     assert.equal(res.status, 413);
     assert.deepEqual(await res.json(), { error: "transcribe request body too large" });
@@ -61,7 +61,7 @@ test("a normal transcribe body logs no sightwork_body_too_large", async () => {
     // No narration: the free empty-audio return, no call, no log.
     const res = await POST(
       new Request("http://localhost/api/transcribe", {
-        method: "POST",
+        method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({}),
       }),
     );

@@ -168,7 +168,7 @@ async function run(opts: {
       transcript: null,
       transcriptTurns: [],
     });
-    const headers: Record<string, string> = {};
+    const headers: Record<string, string> = { "Content-Type": "application/json" };
     if (opts.code !== undefined) headers["x-sightwork-access-code"] = opts.code;
     const res = await POST(
       new Request("http://localhost/api/plan", { method: "POST", headers, body: payload }),

@@ -42,7 +42,7 @@ test("an invalid plan body fails and logs sightwork_invalid_request with its pro
   try {
     const res = await POST(
       new Request("http://localhost/api/plan", {
-        method: "POST",
+        method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ durationSec: 2, frames: [] }),
       }),
     );
@@ -82,7 +82,7 @@ test("a plan body with two problems logs problems 2", async () => {
   };
   try {
     const res = await POST(
-      new Request("http://localhost/api/plan", { method: "POST", body: JSON.stringify({}) }),
+      new Request("http://localhost/api/plan", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({}) }),
     );
     assert.equal(res.status, 200);
     const lines = (await res.text())
@@ -124,7 +124,7 @@ test("a valid plan body logs no sightwork_invalid_request", async () => {
       frames: [{ tSec: 0, dataUrl: jpegDataUrl(64) }],
     });
     const res = await POST(
-      new Request("http://localhost/api/plan", { method: "POST", body }),
+      new Request("http://localhost/api/plan", { method: "POST", headers: { "Content-Type": "application/json" }, body }),
     );
     assert.equal(res.status, 200);
     await res.text();

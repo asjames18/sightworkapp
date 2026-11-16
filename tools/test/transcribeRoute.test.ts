@@ -14,7 +14,7 @@ function paddedBody(bytes: number): string {
 }
 
 function post(body: string): Request {
-  return new Request("http://localhost/api/transcribe", { method: "POST", body });
+  return new Request("http://localhost/api/transcribe", { method: "POST", headers: { "Content-Type": "application/json" }, body });
 }
 
 /** Run fn with a fetch that throws if touched; returns how many times it was called. */

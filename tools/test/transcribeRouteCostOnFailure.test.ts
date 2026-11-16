@@ -27,7 +27,7 @@ function wav(): string {
 }
 
 function post(body: string): Request {
-  return new Request("http://localhost/api/transcribe", { method: "POST", body });
+  return new Request("http://localhost/api/transcribe", { method: "POST", headers: { "Content-Type": "application/json" }, body });
 }
 
 /** Run fn with a dummy key set and fetch stubbed to answer `json` with a 200. */

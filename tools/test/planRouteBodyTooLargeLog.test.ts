@@ -41,7 +41,7 @@ test("an oversize plan body is 413 and logs sightwork_body_too_large", async () 
   try {
     const body = "x".repeat(MAX_PLAN_BODY_BYTES + 1);
     const res = await POST(
-      new Request("http://localhost/api/plan", { method: "POST", body }),
+      new Request("http://localhost/api/plan", { method: "POST", headers: { "Content-Type": "application/json" }, body }),
     );
     assert.equal(res.status, 413);
     assert.deepEqual(await res.json(), { error: "plan request body too large" });
@@ -77,7 +77,7 @@ test("a normal plan body logs no sightwork_body_too_large", async () => {
       frames: [{ tSec: 0, dataUrl: jpegDataUrl(64) }],
     });
     const res = await POST(
-      new Request("http://localhost/api/plan", { method: "POST", body }),
+      new Request("http://localhost/api/plan", { method: "POST", headers: { "Content-Type": "application/json" }, body }),
     );
     assert.equal(res.status, 200);
     await res.text();

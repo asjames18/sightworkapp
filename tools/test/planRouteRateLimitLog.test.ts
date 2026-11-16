@@ -51,7 +51,7 @@ test("the 31st spending request is 429 and logs sightwork_rate_limited", async (
     // (no key, so wiring fails fast) and logs no rate-limit event.
     for (let i = 0; i < RATE_LIMIT_REQUESTS; i++) {
       const res = await POST(
-        new Request("http://localhost/api/plan", { method: "POST", body: body() }),
+        new Request("http://localhost/api/plan", { method: "POST", headers: { "Content-Type": "application/json" }, body: body() }),
       );
       assert.equal(res.status, 200);
       await res.text();
@@ -59,7 +59,7 @@ test("the 31st spending request is 429 and logs sightwork_rate_limited", async (
     assert.deepEqual(rateLimited(logs), []);
     // One over the limit: 429 with Retry-After and exactly one log line.
     const res = await POST(
-      new Request("http://localhost/api/plan", { method: "POST", body: body() }),
+      new Request("http://localhost/api/plan", { method: "POST", headers: { "Content-Type": "application/json" }, body: body() }),
     );
     assert.equal(res.status, 429);
     assert.deepEqual(await res.json(), { error: "Too many plan requests. Try again shortly." });

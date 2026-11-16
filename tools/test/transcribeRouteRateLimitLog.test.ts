@@ -72,7 +72,7 @@ test("the 31st spending request is 429 and logs sightwork_rate_limited", async (
     // and logs no rate-limit event.
     for (let i = 0; i < RATE_LIMIT_REQUESTS; i++) {
       const res = await POST(
-        new Request("http://localhost/api/transcribe", { method: "POST", body: wavBody }),
+        new Request("http://localhost/api/transcribe", { method: "POST", headers: { "Content-Type": "application/json" }, body: wavBody }),
       );
       assert.equal(res.status, 200);
       await res.json();
@@ -80,7 +80,7 @@ test("the 31st spending request is 429 and logs sightwork_rate_limited", async (
     assert.deepEqual(rateLimited(logs), []);
     // One over the limit: 429 with Retry-After and exactly one log line.
     const res = await POST(
-      new Request("http://localhost/api/transcribe", { method: "POST", body: wavBody }),
+      new Request("http://localhost/api/transcribe", { method: "POST", headers: { "Content-Type": "application/json" }, body: wavBody }),
     );
     assert.equal(res.status, 429);
     assert.deepEqual(await res.json(), { error: "Too many transcribe requests. Try again shortly." });

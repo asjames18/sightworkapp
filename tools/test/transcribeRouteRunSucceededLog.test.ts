@@ -111,7 +111,7 @@ test("a finished transcribe logs sightwork_run_succeeded with the response cost"
   }) as typeof fetch;
   await withEnv({ MODEL_API_KEY: "dummy-key" }, stub, async (logs) => {
     const res = await POST(
-      new Request("http://localhost/api/transcribe", { method: "POST", body: transcribeBody() }),
+      new Request("http://localhost/api/transcribe", { method: "POST", headers: { "Content-Type": "application/json" }, body: transcribeBody() }),
     );
     assert.equal(res.status, 200);
     const body = (await res.json()) as { transcript?: string | null; costUsd?: number };
@@ -128,7 +128,7 @@ test("a failed ASR call logs no sightwork_run_succeeded", async () => {
   const stub = (async () => new Response("upstream error", { status: 500 })) as typeof fetch;
   await withEnv({ MODEL_API_KEY: "dummy-key" }, stub, async (logs) => {
     const res = await POST(
-      new Request("http://localhost/api/transcribe", { method: "POST", body: transcribeBody() }),
+      new Request("http://localhost/api/transcribe", { method: "POST", headers: { "Content-Type": "application/json" }, body: transcribeBody() }),
     );
     assert.equal(res.status, 500);
     assert.deepEqual(runSucceeded(logs), []);
@@ -145,7 +145,7 @@ test("an empty narration logs no sightwork_run_succeeded", async () => {
   }) as typeof fetch;
   await withEnv({ MODEL_API_KEY: "dummy-key" }, stub, async (logs) => {
     const res = await POST(
-      new Request("http://localhost/api/transcribe", { method: "POST", body: JSON.stringify({}) }),
+      new Request("http://localhost/api/transcribe", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({}) }),
     );
     assert.equal(res.status, 200);
     const body = (await res.json()) as { transcript?: string | null; costUsd?: number };

@@ -29,7 +29,7 @@ test("an invalid transcribe body is 400 and logs sightwork_invalid_request", asy
   try {
     const res = await POST(
       new Request("http://localhost/api/transcribe", {
-        method: "POST",
+        method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ audioWavBase64: 123 }),
       }),
     );
@@ -61,7 +61,7 @@ test("a valid transcribe body logs no sightwork_invalid_request", async () => {
   try {
     const res = await POST(
       new Request("http://localhost/api/transcribe", {
-        method: "POST",
+        method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({}),
       }),
     );

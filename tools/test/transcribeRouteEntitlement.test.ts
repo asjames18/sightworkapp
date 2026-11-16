@@ -113,7 +113,7 @@ async function run(
     logs.push(args.map((a) => String(a)).join(" "));
   };
   try {
-    const headers: Record<string, string> = {};
+    const headers: Record<string, string> = { "Content-Type": "application/json" };
     if (opts.code !== undefined) headers["x-sightwork-access-code"] = opts.code;
     const res = await POST(
       new Request("http://localhost/api/transcribe", { method: "POST", headers, body: payload }),

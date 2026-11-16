@@ -30,7 +30,7 @@ function wav(): string {
 
 function post(body: string, signal?: AbortSignal): Request {
   return new Request("http://localhost/api/transcribe", {
-    method: "POST",
+    method: "POST", headers: { "Content-Type": "application/json" },
     body,
     ...(signal ? { signal } : {}),
   });

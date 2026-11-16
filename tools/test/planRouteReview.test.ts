@@ -117,7 +117,7 @@ async function run(reviewer: Reviewer): Promise<Run> {
       transcript: null,
       transcriptTurns: [],
     });
-    const res = await POST(new Request("http://localhost/api/plan", { method: "POST", body: payload }));
+    const res = await POST(new Request("http://localhost/api/plan", { method: "POST", headers: { "Content-Type": "application/json" }, body: payload }));
     const text = await res.text();
     return { lines: text.split("\n").filter(Boolean).map((l) => JSON.parse(l) as PlanJobStatus), baseten, meta };
   } finally {

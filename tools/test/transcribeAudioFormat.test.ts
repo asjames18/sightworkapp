@@ -103,7 +103,7 @@ test("POST /api/transcribe: stereo audio gets a 400 with zero fetches", async ()
   try {
     const res = await POST(
       new Request("http://localhost/api/transcribe", {
-        method: "POST",
+        method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ audioWavBase64: wav({ channels: 2 }) }),
       }),
     );

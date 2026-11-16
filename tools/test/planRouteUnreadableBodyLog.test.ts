@@ -38,7 +38,7 @@ test("a non-JSON plan body fails and logs sightwork_unreadable_body", async () =
   };
   try {
     const res = await POST(
-      new Request("http://localhost/api/plan", { method: "POST", body: "{not json" }),
+      new Request("http://localhost/api/plan", { method: "POST", headers: { "Content-Type": "application/json" }, body: "{not json" }),
     );
     assert.equal(res.status, 200);
     const lines = (await res.text())
@@ -76,7 +76,7 @@ test("an unreadable plan body is 400 and logs sightwork_unreadable_body", async 
   try {
     const stream = new ReadableStream({ start(c) { c.error(new Error("boom")); } });
     // duplex is not in this TS lib's RequestInit, so the cast stands in for it.
-    const init = { method: "POST", body: stream, duplex: "half" } as unknown as RequestInit;
+    const init = { method: "POST", headers: { "Content-Type": "application/json" }, body: stream, duplex: "half" } as unknown as RequestInit;
     const res = await POST(new Request("http://localhost/api/plan", init));
     assert.equal(res.status, 400);
     assert.deepEqual(await res.json(), { error: "could not read request body" });
@@ -110,7 +110,7 @@ test("a readable plan body logs no sightwork_unreadable_body", async () => {  co
       frames: [{ tSec: 0, dataUrl: jpegDataUrl(64) }],
     });
     const res = await POST(
-      new Request("http://localhost/api/plan", { method: "POST", body }),
+      new Request("http://localhost/api/plan", { method: "POST", headers: { "Content-Type": "application/json" }, body }),
     );
     assert.equal(res.status, 200);
     await res.text();
