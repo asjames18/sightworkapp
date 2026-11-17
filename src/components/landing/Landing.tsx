@@ -4,6 +4,8 @@ import { LastPlanLink } from "./LastPlanLink";
 import { AccessNavLinks } from "../AccessLinks";
 import { byokEnabled } from "@/lib/client/byokKey";
 import { paidPlansOn, PRICING_HREF, SETTINGS_HREF } from "@/lib/client/runAccess";
+import { usageOn } from "@/lib/client/usage";
+import { USAGE_NOTE } from "@/lib/usage/events";
 
 const ring = "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent";
 const primary = `inline-flex min-h-[44px] items-center justify-center rounded-xl bg-accent-dark px-6 py-3 text-base font-semibold text-white hover:bg-ink ${ring}`;
@@ -68,6 +70,7 @@ const impact = [
 const finePrint = [
   "Counts are approximate, from what the camera saw.",
   "Your video's frames and narration are sent to the AI providers to build your plan, and we don't keep a copy on our servers. The finished plan is saved on your device.",
+  ...(usageOn() ? [USAGE_NOTE] : []),
 ];
 
 const secondary = `inline-flex min-h-[44px] items-center justify-center rounded-xl border border-ink/20 bg-white/60 px-6 py-3 text-base font-semibold text-ink hover:border-ink/40 ${ring}`;

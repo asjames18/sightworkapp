@@ -100,6 +100,9 @@ Every size sends at most 48 frames, spread over the actual clip: takes up to 45 
 ## Full details
 Setup and test commands, preview links, how real runs work, every plan screen feature, and the status page: [docs/DETAILS.md](docs/DETAILS.md).
 
+## Usage counts
+SightWork can keep anonymous daily totals (page views, plan runs, checkouts) to see how the app is used: no cookies, and no names, emails, IP addresses, codes, keys, videos or plans. Exactly what is counted and how to view it: [docs/USAGE-COUNTS.md](docs/USAGE-COUNTS.md).
+
 ## Eval
 `npm run eval` scores plans against labeled answer keys in `tools/eval/keys/` (recall, recall on high-severity items, precision, and whether the #1 problem is a high-severity one). It is offline and deterministic (keyword matching on each problem's title and detail), and `npm test` holds the real sanctuary run to its baseline so a prompt or pipeline change that loses a known hazard fails the checks. Today's baseline on the real sanctuary run: recall 0.8, high-severity recall 1.0, precision 1.0. The key is a draft labeled from the run's frames; confirm on site before treating it as ground truth.
 

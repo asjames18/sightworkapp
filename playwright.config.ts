@@ -64,6 +64,9 @@ export default defineConfig({
           BASETEN_API_KEY: "",
           SIGHTWORK_BILLING: "on",
           STRIPE_SECRET_KEY: "",
+          SIGHTWORK_USAGE_URL: "",
+          SIGHTWORK_USAGE_KEY: "",
+          SIGHTWORK_USAGE_VIEW_TOKEN: "",
         },
       },
 });
