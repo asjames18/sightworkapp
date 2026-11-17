@@ -140,8 +140,9 @@ describe("own-key runner", () => {
     assert.equal(needsTesterCode("own", ""), false);
   });
   test("the own-key runner is its own stable runner", () => {
-    assert.equal(planJobFor("own"), byokPlanJob);
-    assert.equal(planJobFor("own", true), byokPlanJob);
+    assert.equal(planJobFor("own"), planJobFor("own"));
+    assert.equal(planJobFor("own", true), planJobFor("own"));
+    assert.notEqual(planJobFor("own"), byokPlanJob, "wrapped so the run is counted");
     assert.notEqual(planJobFor("own"), mockPlanJob);
     assert.notEqual(planJobFor("own"), planJobFor("api"));
   });

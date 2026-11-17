@@ -1,6 +1,7 @@
-import { NextResponse, type NextRequest } from "next/server";
+import { NextResponse, after, type NextRequest } from "next/server";
 import { handleBillingWebhook } from "@/lib/billing/webhook";
 import { sendPurchaseEmail } from "@/lib/billing/purchaseEmail";
+import { recordUsage } from "@/lib/usage/store";
 
 /** POST /api/billing/webhook: Stripe's signed events. The raw body is what gets verified. 404 unless SIGHTWORK_BILLING=on. */
 export async function POST(request: NextRequest) {
@@ -9,6 +10,8 @@ export async function POST(request: NextRequest) {
   // A verified, paid checkout: email the buyer their access code. Runs only after the signature check passed.
   if (r.status === 200 && "type" in r.body && r.body.type === "checkout.session.completed") {
     await sendPurchaseEmail(raw);
+    // Anonymous count of finished checkouts (src/lib/usage): no buyer, email or amount is kept.
+    after(() => recordUsage("checkout_done", "", ""));
   }
   return NextResponse.json(r.body, { status: r.status, headers: { "Cache-Control": "no-store" } });
 }

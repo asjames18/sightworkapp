@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
+import { UsageBeacon } from "@/components/UsageBeacon";
 
 // Self-hosted at build time by next/font: no runtime request to Google, same look on every device.
 const inter = Inter({ subsets: ["latin"], display: "swap", variable: "--font-inter" });
@@ -47,6 +48,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           </div>
         </noscript>
         {children}
+        <UsageBeacon />
       </body>
     </html>
   );

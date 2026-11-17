@@ -16,6 +16,8 @@ const nextConfig: NextConfig = {
   // (never a secret) is copied into a public build-time flag (src/lib/client/runAccess.ts).
   env: {
     NEXT_PUBLIC_SIGHTWORK_PAID_PLANS: process.env.SIGHTWORK_BILLING === "on" ? "on" : "off",
+    // Anonymous usage counts (src/lib/usage) are on only when the server has somewhere to keep them.
+    NEXT_PUBLIC_SIGHTWORK_USAGE: process.env.SIGHTWORK_USAGE_URL?.trim() && process.env.SIGHTWORK_USAGE_KEY?.trim() ? "on" : "off",
   },
   poweredByHeader: false,
   // `/start?view=example[&ex=<id>]` is served from the prerendered /start/example/<id> page (the URL in the

@@ -5,6 +5,7 @@ import { narrationChunkMaxSec } from "./narrationChunks";
 import { savedSpaceRequestFields } from "./spaceType";
 import { byokPlanJob } from "./byokPlanJob";
 import { byokEnabled, loadKey } from "./byokKey";
+import { countedRun } from "./usage";
 
 /** "own" runs on the user's own Meta key, in this browser (byokPlanJob.ts); "api" runs on SightWork's server. */
 export type RunnerKind = "mock" | "api" | "own";
@@ -87,10 +88,15 @@ export function needsTesterCode(kind: RunnerKind, savedCode: string): boolean {
 }
 
 /** The runner for a kind. Stable references, so a run only restarts when the video or run number changes. */
+// Real runs count as anonymous totals (src/lib/client/usage.ts); the example-plan preview isn't counted.
+const countedOwn = countedRun("byok", byokPlanJob);
+const countedApi = countedRun("code", apiPlanJob);
+const countedLightApi = countedRun("code", lightApiPlanJob);
+
 export function planJobFor(kind: RunnerKind, light = false): PlanJobRunner {
-  if (kind === "own") return byokPlanJob;
+  if (kind === "own") return countedOwn;
   if (kind !== "api") return mockPlanJob;
-  return light ? lightApiPlanJob : apiPlanJob;
+  return light ? countedLightApi : countedApi;
 }
 
 /** The runner kind for a video the user brought, read in the browser for this page load. */
