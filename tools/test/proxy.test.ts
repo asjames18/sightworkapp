@@ -150,3 +150,11 @@ test("with billing on, the tester code no longer opens a plan or transcribe run"
     else process.env[BILL] = savedBill;
   }
 });
+
+test("the usage counter and its report skip the tester gate; look-alike paths stay gated", () => {
+  delete process.env[ENV];
+  const at = (path: string) => proxy(new NextRequest(`http://localhost${path}`, { method: "POST" }));
+  assert.equal(at("/api/usage").status, 200);
+  assert.equal(at("/api/usage/report").status, 200);
+  for (const p of ["/api/usage/", "/api/usage/x", "/api/usagex", "/api/usage/report/x"]) assert.equal(at(p).status, 401, p);
+});

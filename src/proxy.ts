@@ -19,6 +19,9 @@ function matches(given: string, expected: string): boolean {
 /** Paid-plan routes (checkout and the like) spend no model credits and switch themselves off unless billing is on. */
 const BILLING_ROUTE = /^\/api\/billing\/[a-z-]{1,40}$/;
 
+/** The anonymous usage counter and its report (src/lib/usage) spend no model credits and check their own input. */
+const USAGE_ROUTE = /^\/api\/usage(\/report)?$/;
+
 const ACCESS_HEADER = "x-sightwork-access-code";
 
 /** Routes that check an access code themselves (signature and Stripe status) before reading the body. */
@@ -51,6 +54,7 @@ function paidPathWithoutCode(request: NextRequest): boolean {
 
 export function proxy(request: NextRequest) {
   if (BILLING_ROUTE.test(request.nextUrl.pathname)) return NextResponse.next();
+  if (USAGE_ROUTE.test(request.nextUrl.pathname)) return NextResponse.next();
   if (paidRun(request)) {
     console.log(JSON.stringify({ event: "sightwork_paid_run", path: request.nextUrl.pathname, at: new Date().toISOString() }));
     return NextResponse.next();
